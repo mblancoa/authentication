@@ -1,6 +1,15 @@
 package core
 
-import "fmt"
+import (
+	"fmt"
+)
+
+type CredentialState string
+
+const (
+	Active  CredentialState = "Active"
+	Blocked                 = "Blocked"
+)
 
 type User struct {
 	ID          string `crypt:"true"`
@@ -10,7 +19,7 @@ type User struct {
 type UserCredentials struct {
 	ID       string `hash:"true"`
 	Password string `hash:"true"`
-	State    string
+	State    CredentialState
 }
 
 type UserFullCredentials struct {

@@ -1,11 +1,11 @@
-module github.com/x/authentication/repository-mongodb
+module github.com/mblancoa/authentication/repository-mongodb
 
 go 1.21.3
 
 require (
-	github.com/x/authentication/domain latest
+	github.com/mblancoa/authentication/domain latest
 )
 
 replace (
-	github.com/x/authentication/domain latest  => ../domain
+	github.com/mblancoa/authentication/domain latest  => ./../core
 )

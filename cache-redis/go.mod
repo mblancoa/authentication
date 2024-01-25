@@ -1,11 +1,11 @@
-module github.com/x/authentication/cache-redis
+module github.com/mblancoa/authentication/cache-redis
 
 go 1.21.3
 
 require (
-	github.com/x/authentication/core latest
+	github.com/mblancoa/authentication/core latest
 )
 
 replace (
-	github.com/x/authentication/core latest  => ./../core
+	github.com/mblancoa/authentication/core latest  => ./../core
 )

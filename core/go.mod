@@ -1,4 +1,4 @@
-module github.com/x/authentication/core
+module github.com/mblancoa/authentication/core
 
 go 1.21.3
 

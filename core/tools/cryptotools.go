@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/x/authentication/core/errors"
+	"github.com/mblancoa/authentication/core/errors"
 	"reflect"
 	"strings"
 )
@@ -19,7 +19,7 @@ func Base64Encode(b []byte) string {
 func Base64Decode(s string) ([]byte, error) {
 	data, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		return []byte{}, errors.NewErrorByCause("Error base64 decoding", err)
+		return []byte{}, errors.NewGenericErrorByCause("Error base64 decoding", err)
 	}
 	return data, nil
 }
@@ -57,7 +57,7 @@ func MarshalCrypt(obj, v any, secret string) error {
 			value := fValue.String()
 			encValue, err := Encrypt(value, secret)
 			if err != nil {
-				return errors.NewErrorf("Error encrypting field %s", f.Name)
+				return errors.NewGenericErrorf("Error encrypting field %s", f.Name)
 			}
 			vType.Field(i).Set(reflect.ValueOf(encValue))
 		} else {
@@ -78,7 +78,7 @@ func UnMarshalCrypt(obj, v any, secret string) error {
 			value := fValue.String()
 			decValue, err := Decrypt(value, secret)
 			if err != nil {
-				return errors.NewErrorf("Error decrypting field %s", f.Name)
+				return errors.NewGenericErrorf("Error decrypting field %s", f.Name)
 			}
 			vValue.Field(i).Set(reflect.ValueOf(decValue))
 		} else {
