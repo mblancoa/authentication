@@ -1,7 +1,8 @@
 package tools
 
 import (
-	"bytes"
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"github.com/thanhpk/randstr"
 	"testing"
 )
@@ -15,22 +16,17 @@ func FuzzBase64EncDec(f *testing.F) {
 	f.Fuzz(func(t *testing.T, in []byte) {
 		enc := Base64Encode(in)
 		out, err := Base64Decode(enc)
-		if err != nil {
-			t.Fatalf("%v: decode: %v", in, err)
-		}
-		if !bytes.Equal(in, out) {
-			t.Fatalf("%v: not equal after round trip: %v", in, out)
-		}
+		assert.NoError(t, err, fmt.Sprintf("%v: decode: %v", in, err))
+		assert.Equal(t, in, out, fmt.Sprintf("%v: not equal after round trip: %v", in, out))
 	})
 }
 
 func TestBase64Encode(t *testing.T) {
-	bytess := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
+	bts := []byte("Lorem ipsum dolor sit amet, consectetur adipiscing elit")
 	expected := "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdA=="
-	result := Base64Encode(bytess)
-	if result != expected {
-		t.Fatalf("'%s' was expected bput the result was %s", expected, result)
-	}
+	result := Base64Encode(bts)
+
+	assert.Equal(t, expected, result)
 }
 
 func TestBase64Decode(t *testing.T) {
@@ -43,39 +39,35 @@ func TestBase64Decode(t *testing.T) {
 		{"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdA==", false, ""},
 	}
 	for i, uCase := range useCases {
-		_, err := Base64Decode(uCase.Data)
+		result, err := Base64Decode(uCase.Data)
 		if uCase.Error {
-			if err != nil {
-				if err.Error() != uCase.Message {
-					t.Fatalf("%d - The error message '%s' was expected but was'%s'", i, uCase.Message, err.Error())
-				}
-			} else {
-				t.Fatalf("%d - An error was expected", i+1)
-			}
+			assert.Error(t, err, "case:%d", i)
+			assert.Equal(t, uCase.Message, err.Error(), "case:%d", i)
+			assert.Empty(t, result)
 		} else {
-			if err != nil {
-				t.Fatalf("%d - Unexpected error: '%s'", i, err.Error())
-			}
+			assert.NoError(t, err, "case:%d", i)
+			assert.NotEmpty(t, result)
 		}
 	}
 }
 
 func TestEncrypt(t *testing.T) {
 	word := string(randstr.Bytes(16))
-	_, err := Encrypt(word, secret)
-	if err != nil {
-		t.Fatalf("Unexpected error encrypting '%s': '%s'", word, err.Error())
-	}
+	result, err := Encrypt(word, secret)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
 }
 
 func TestDecrypt_ok(t *testing.T) {
 	//Decrypting correct word
 	word := string(randstr.Bytes(16))
 	encWord, _ := Encrypt(word, secret)
-	_, err := Decrypt(encWord, secret)
-	if err != nil {
-		t.Fatalf("Unexpected error decrypting '%s': '%s'", encWord, err.Error())
-	}
+	result, err := Decrypt(encWord, secret)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+	assert.Equal(t, word, result)
 }
 
 func TestDecrypt_ko_errorB64(t *testing.T) {
@@ -83,14 +75,11 @@ func TestDecrypt_ko_errorB64(t *testing.T) {
 	word := string(randstr.Bytes(16))
 	encWord, _ := Encrypt(word, secret)
 	expectedErr := "Error base64 decoding\nCaused by illegal base64 data at input byte 45"
-	_, err := Decrypt(encWord[14:], secret)
-	if err != nil {
-		if err.Error() != expectedErr {
-			t.Fatalf("Error message '%s' was expected instead of '%s", expectedErr, err.Error())
-		}
-	} else {
-		t.Fatalf("An error was expected")
-	}
+	result, err := Decrypt(encWord[14:], secret)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedErr, err.Error())
+	assert.Empty(t, result)
 }
 
 func TestDecrypt_ko_errorDecrypting(t *testing.T) {
@@ -99,14 +88,11 @@ func TestDecrypt_ko_errorDecrypting(t *testing.T) {
 	wordToDecrypt := Base64Encode([]byte(word))
 
 	expectedErr := "cipher: message authentication failed"
-	_, err := Decrypt(wordToDecrypt, secret)
-	if err != nil {
-		if err.Error() != expectedErr {
-			t.Fatalf("Error message '%s' was expected instead of '%s", expectedErr, err.Error())
-		}
-	} else {
-		t.Fatalf("An error was expected")
-	}
+	result, err := Decrypt(wordToDecrypt, secret)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedErr, err.Error())
+	assert.Empty(t, result)
 }
 
 func TestMarshalCrypt(t *testing.T) {
@@ -116,24 +102,15 @@ func TestMarshalCrypt(t *testing.T) {
 	}
 	prop1 := string(randstr.Bytes(16))
 	prop2 := string(randstr.Bytes(16))
-	str := myStruct{
-		Prop1: prop1,
-		Prop2: prop2,
-	}
+	str := myStruct{prop1, prop2}
 	encProp1, _ := Encrypt(prop1, secret)
+	expected := myStruct{encProp1, prop2}
 
 	var result myStruct
 	err := MarshalCrypt(str, &result, secret)
 
-	if err != nil {
-		t.Fatalf("Unexpected Error Marshaling: '%s'", err.Error())
-	}
-	if result.Prop1 != encProp1 {
-		t.Fatalf("It was expected '%s' for Prop1 but was '%s'", encProp1, result.Prop1)
-	}
-	if result.Prop2 != prop2 {
-		t.Fatalf("It was expected '%s' for Prop2 but was '%s'", prop2, result.Prop2)
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
 
 func TestUnMarshalCrypt_ok(t *testing.T) {
@@ -145,23 +122,14 @@ func TestUnMarshalCrypt_ok(t *testing.T) {
 	prop := string(randstr.Bytes(16))
 	prop1, _ := Encrypt(prop, secret)
 	prop2 := string(randstr.Bytes(16))
-	str := myStruct{
-		Prop1: prop1,
-		Prop2: prop2,
-	}
+	str := myStruct{prop1, prop2}
+	expected := myStruct{prop, prop2}
 
 	var result myStruct
-
 	err := UnMarshalCrypt(str, &result, secret)
-	if err != nil {
-		t.Fatalf("Unexpected Error unmarshaling: '%s'", err.Error())
-	}
-	if result.Prop1 != prop {
-		t.Fatalf("It was expected '%s' for Prop1 but was '%s'", prop, result.Prop1)
-	}
-	if result.Prop2 != prop2 {
-		t.Fatalf("It was expected '%s' for Prop2 but was '%s'", prop2, result.Prop2)
-	}
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
 func TestUnMarshalCrypt_ko(t *testing.T) {
 	type myStruct struct {
@@ -176,16 +144,13 @@ func TestUnMarshalCrypt_ko(t *testing.T) {
 		Prop2: string(randstr.Bytes(16)),
 		Prop3: string(randstr.Bytes(16)),
 	}
-	expectedError := "Error decrypting field [Prop3]"
+	expectedError := "Error decrypting field [[Prop3]]"
 	var result myStruct
 
 	err := UnMarshalCrypt(str, &result, secret)
-	if err == nil {
-		t.Fatalf("Un error was expected")
-	}
-	if expectedError != err.Error() {
-		t.Fatalf("The error '%s' was expected but was '%s'", expectedError, err.Error())
-	}
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err.Error())
 }
 
 func TestMarshalHash(t *testing.T) {
@@ -195,19 +160,11 @@ func TestMarshalHash(t *testing.T) {
 	}
 	prop1 := string(randstr.Bytes(16))
 	prop2 := string(randstr.Bytes(16))
-	str := myStruct{
-		Prop1: prop1,
-		Prop2: prop2,
-	}
-	hash := mdHashing(prop1)
+	str := myStruct{prop1, prop2}
+	expected := myStruct{mdHashing(prop1), prop2}
 
 	var result myStruct
 	MarshalHash(str, &result)
 
-	if result.Prop1 != hash {
-		t.Fatalf("It was expected '%s' for Prop1 but was '%s'", hash, result.Prop1)
-	}
-	if result.Prop2 != prop2 {
-		t.Fatalf("It was expected '%s' for Prop2 but was '%s'", prop2, result.Prop2)
-	}
+	assert.Equal(t, expected, result)
 }
