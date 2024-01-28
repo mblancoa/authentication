@@ -1,0 +1,19 @@
+quiet: False
+disable-version-string: True
+with-expecter: True
+mockname: "Mock{{.InterfaceName}}"
+filename: "{{.MockName}}.go"
+dir: "{{.PackageName}}"
+inpackage: True
+packages:
+  github.com/mblancoa/authentication/core:
+    config:
+      dir: "./"
+    interfaces:
+      UserCredentialsRepository:
+      UserRepository:
+  github.com/mblancoa/authentication/core/tools:
+    interfaces:
+      NotificationService:
+
+# Lots more config...

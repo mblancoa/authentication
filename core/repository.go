@@ -8,14 +8,14 @@ type UserCredentialsRepository interface {
 
 	// InsertUserCredentials inserts a new user credentials record into database
 	// credentials must be hashed
-	InsertUserCredentials(credentials UserCredentials)
+	InsertUserCredentials(credentials UserCredentials) (UserCredentials, error)
 
 	// FindUserCredentialsById Returns the userFullCredentials found in db. If not found, userFullCredentials will be empty and error not nil
 	// id must be hashed and the returned userFullCredentials will be hashed
-	FindUserCredentialsById(credentials UserFullCredentials)
+	FindUserCredentialsById(credentials UserFullCredentials) (UserFullCredentials, error)
 
 	// UpdateUserCredentials modifies the userFullCredentials with the new data
-	UpdateUserCredentials(credentials UserFullCredentials)
+	UpdateUserCredentials(credentials UserFullCredentials) error
 }
 
 type UserRepository interface {
