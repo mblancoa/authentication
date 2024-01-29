@@ -141,7 +141,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredenti
 func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
 	var user User
 	gofakeit.Struct(&user)
-	j, _ := getJwt(user, SecretJwt)
+	j, _ := getJwtFromUser(user, SecretJwt)
 
 	result, err := suite.authenticationService.ValidateJWT(j)
 
@@ -161,22 +161,39 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT
 }
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired() {
-	var user User
-	gofakeit.Struct(&user)
+	id := gofakeit.Username()
 
 	claims := CustomClaims{
 		jwt.StandardClaims{
-			Id:        user.ID,
+			Id:        id,
 			ExpiresAt: time.Now().Add(time.Minute * -1).Unix(),
 		},
 		[]string{"admin"},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	wToken, err := token.SignedString([]byte(SecretJwt))
+	wToken, _ := getJwt(claims, SecretJwt)
 
 	result, err := suite.authenticationService.ValidateJWT(wToken)
 
 	suite.Assert().Error(err)
 	suite.Assert().Regexp("token is expired by .+", err.Error())
 	suite.Assert().False(result)
+}
+
+func (suite *AuthenticationServiceSuite) TestRefreshJWT_successful() {
+	id := gofakeit.Username()
+
+	claims := CustomClaims{
+		jwt.StandardClaims{
+			Id:        id,
+			ExpiresAt: time.Now().Add(time.Minute).Unix(),
+		},
+		[]string{"admin"},
+	}
+	wToken, _ := getJwt(claims, SecretJwt)
+
+	rToken, err := suite.authenticationService.RefreshJWT(wToken)
+
+	suite.Assert().NoError(err)
+	suite.Assert().NotEmpty(rToken)
+	suite.Assert().NotEqual(wToken, rToken)
 }

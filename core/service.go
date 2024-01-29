@@ -21,6 +21,10 @@ type AuthenticationService interface {
 
 	// ValidateJWT validates a given jwt
 	ValidateJWT(jwt string) (bool, error)
+
+	// RefreshJWT generates a new jwt
+	RefreshJWT(jwt string) (string, error)
+
 	StartSingUP(user User) error
 	SingUP(confirmation ConfirmationCredentials) error
 }
@@ -70,7 +74,7 @@ func (a *authenticationService) Login(credentials UserCredentials) (string, erro
 		return "", err
 	}
 
-	return getJwt(decUser, SecretJwt)
+	return getJwtFromUser(decUser, SecretJwt)
 }
 
 func (a *authenticationService) ValidateJWT(token string) (bool, error) {
@@ -87,6 +91,20 @@ func (a *authenticationService) ValidateJWT(token string) (bool, error) {
 	}
 }
 
+func (a *authenticationService) RefreshJWT(token string) (string, error) {
+	claims, err := decodeJWT(token, SecretJwt)
+	if err != nil {
+		return "", err
+	}
+	claims.ExpiresAt = time.Now().Add(time.Minute * time.Duration(10)).Unix()
+	refresh, err := getJwt(*claims, SecretJwt)
+	if err != nil {
+		return "", errors.NewGenericError("Error refreshing token")
+	}
+	return refresh, nil
+
+}
+
 func (a *authenticationService) StartSingUP(user User) error {
 	//TODO implement me
 	panic("implement me")
@@ -97,7 +115,12 @@ func (a *authenticationService) SingUP(confirmation ConfirmationCredentials) err
 	panic("implement me")
 }
 
-func getJwt(user User, key string) (string, error) {
+func getJwt(claims CustomClaims, key string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(key))
+}
+
+func getJwtFromUser(user User, key string) (string, error) {
 	claims := CustomClaims{
 		jwt.StandardClaims{
 			Id:        user.ID,
@@ -105,8 +128,7 @@ func getJwt(user User, key string) (string, error) {
 		},
 		user.Roles,
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(key))
+	return getJwt(claims, key)
 }
 
 func decodeJWT(token string, key string) (*CustomClaims, error) {
