@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"strings"
 )
 
 type CredentialState string
@@ -45,7 +46,11 @@ type StrongCustomerAuthentication struct {
 }
 
 func (u User) String() string {
-	return fmt.Sprintf("User: {\n\tID: %s,\n\tEmail: %s,\n\tPhoneNumber: %s,\n}", u.ID, u.Email, u.PhoneNumber)
+	roles := "nil"
+	if u.Roles != nil {
+		roles = strings.Join(u.Roles, ",")
+	}
+	return fmt.Sprintf("User: {\n\tID: %s,\n\tEmail: %s,\n\tPhoneNumber: %s,\n\tRoles: %s,\n}", u.ID, u.Email, u.PhoneNumber, roles)
 }
 func (u UserCredentials) String() string {
 	return fmt.Sprintf("UserCredentials: {\n\tID: %s,\n\tPassword: %s,\n\tState: %s,\n}", u.ID, u.Password, u.State)

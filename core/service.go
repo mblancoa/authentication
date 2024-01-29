@@ -18,6 +18,9 @@ const (
 type AuthenticationService interface {
 	// Login checks the authenticity of the user and returns its jws
 	Login(credentials UserCredentials) (string, error)
+
+	// ValidateJWT validates a given jwt
+	ValidateJWT(jwt string) (bool, error)
 	StartSingUP(user User) error
 	SingUP(confirmation ConfirmationCredentials) error
 }
@@ -68,6 +71,20 @@ func (a *authenticationService) Login(credentials UserCredentials) (string, erro
 	}
 
 	return getJwt(decUser, SecretJwt)
+}
+
+func (a *authenticationService) ValidateJWT(token string) (bool, error) {
+	tokenData, err := decodeJWT(token, SecretJwt)
+	if err != nil {
+		return false, err
+	}
+
+	err = tokenData.Valid()
+	if err != nil {
+		return false, err
+	} else {
+		return true, nil
+	}
 }
 
 func (a *authenticationService) StartSingUP(user User) error {

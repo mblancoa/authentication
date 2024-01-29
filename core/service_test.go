@@ -3,10 +3,12 @@ package core
 // Basic imports
 import (
 	"github.com/brianvoe/gofakeit"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/core/errors"
 	"github.com/mblancoa/authentication/core/tools"
 	"github.com/stretchr/testify/suite"
 	"testing"
+	"time"
 )
 
 type AuthenticationServiceSuite struct {
@@ -38,18 +40,19 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var user User
 	gofakeit.Struct(&user)
 	user.ID = credentials.ID
+	user.Roles = []string{"admin", "customer"}
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
 	suite.userRepository.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
 
-	jwt, err := suite.authenticationService.Login(credentials)
+	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().NoError(err)
-	suite.Assert().NotEmpty(jwt)
+	suite.Assert().NotEmpty(wToken)
 
-	token, _ := decodeJWT(jwt, SecretJwt)
+	token, _ := decodeJWT(wToken, SecretJwt)
 	suite.Assert().Equal(user.ID, token.Id)
 	suite.Assert().Equal(user.Roles, token.Roles)
 
@@ -93,11 +96,11 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
 	suite.userRepository.EXPECT().FindUserById(id).Return(User{}, expectedError)
 
-	jwt, err := suite.authenticationService.Login(credentials)
+	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
 	suite.Assert().Equal(expectedError, err)
-	suite.Assert().Empty(jwt)
+	suite.Assert().Empty(wToken)
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
@@ -112,11 +115,11 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
 
-	jwt, err := suite.authenticationService.Login(credentials)
+	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
 	suite.Assert().Equal(expectedError, err)
-	suite.Assert().Empty(jwt)
+	suite.Assert().Empty(wToken)
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredentialsByIdAndPassword() {
@@ -128,9 +131,52 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredenti
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(UserCredentials{}, false)
 
-	jwt, err := suite.authenticationService.Login(credentials)
+	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
 	suite.Assert().Equal(expectedError, err)
-	suite.Assert().Empty(jwt)
+	suite.Assert().Empty(wToken)
+}
+
+func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
+	var user User
+	gofakeit.Struct(&user)
+	j, _ := getJwt(user, SecretJwt)
+
+	result, err := suite.authenticationService.ValidateJWT(j)
+
+	suite.Assert().NoError(err)
+	suite.Assert().True(result)
+}
+
+func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT() {
+	var wToken string
+	gofakeit.Struct(&wToken)
+
+	result, err := suite.authenticationService.ValidateJWT(wToken)
+
+	suite.Assert().Error(err)
+	suite.Assert().Equal("token contains an invalid number of segments", err.Error())
+	suite.Assert().False(result)
+}
+
+func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired() {
+	var user User
+	gofakeit.Struct(&user)
+
+	claims := CustomClaims{
+		jwt.StandardClaims{
+			Id:        user.ID,
+			ExpiresAt: time.Now().Add(time.Minute * -1).Unix(),
+		},
+		[]string{"admin"},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	wToken, err := token.SignedString([]byte(SecretJwt))
+
+	result, err := suite.authenticationService.ValidateJWT(wToken)
+
+	suite.Assert().Error(err)
+	suite.Assert().Regexp("token is expired by .+", err.Error())
+	suite.Assert().False(result)
 }
