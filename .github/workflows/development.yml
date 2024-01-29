@@ -1,0 +1,29 @@
+name: Development
+on:
+  push:
+    types: [created,update]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+
+    steps:
+      - name: Setup Go environment
+        uses: actions/setup-go@v5.0.0
+        
+      - name: Update dependencies
+        uses: actions/go-dependency-submission@v2.0.0
+        
+      - name: Setup Mockery
+        uses: github.com/vektra/mockery/v2@v2.40.1
+        
+      - name: Generate mocks
+        run: mockery
+
+      - name: Test execution
+        run: go test ./...
+
+      - name: Clean
+        run: make clean
+ 
