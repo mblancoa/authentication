@@ -4,8 +4,9 @@ package core
 import (
 	"github.com/brianvoe/gofakeit"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/mblancoa/authentication/core/errors"
 	"github.com/mblancoa/authentication/core/tools"
+	"github.com/mblancoa/authentication/errors"
+	tools2 "github.com/mblancoa/authentication/tools"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -34,7 +35,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var credentials UserCredentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials UserCredentials
-	tools.MarshalHash(credentials, &hashCredentials)
+	tools2.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 	returnedCredentials.State = Active
 	var user User
@@ -42,7 +43,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	user.ID = credentials.ID
 	user.Roles = []string{"admin", "customer"}
 	var encUser User
-	_ = tools.MarshalCrypt(user, &encUser, Secret)
+	_ = tools2.MarshalCrypt(user, &encUser, Secret)
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
 	suite.userRepository.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
@@ -62,13 +63,13 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	var credentials UserCredentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials UserCredentials
-	tools.MarshalHash(credentials, &hashCredentials)
+	tools2.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
 	var user User
 	gofakeit.Struct(&user)
-	id, _ := tools.Encrypt(credentials.ID, Secret)
+	id, _ := tools2.Encrypt(credentials.ID, Secret)
 	user.ID = id
 	expectedError := "Error decrypting field Email"
 
@@ -86,11 +87,11 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 	var credentials UserCredentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials UserCredentials
-	tools.MarshalHash(credentials, &hashCredentials)
+	tools2.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
-	id, _ := tools.Encrypt(credentials.ID, Secret)
+	id, _ := tools2.Encrypt(credentials.ID, Secret)
 	expectedError := errors.NewNotFoundError("User not found")
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
@@ -107,7 +108,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	var credentials UserCredentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials UserCredentials
-	tools.MarshalHash(credentials, &hashCredentials)
+	tools2.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Blocked
@@ -126,7 +127,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredenti
 	var credentials UserCredentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials UserCredentials
-	tools.MarshalHash(credentials, &hashCredentials)
+	tools2.MarshalHash(credentials, &hashCredentials)
 	expectedError := errors.NewAuthenticationError("Credentials not found")
 
 	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(UserCredentials{}, false)

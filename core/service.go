@@ -2,8 +2,8 @@ package core
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/mblancoa/authentication/core/errors"
-	"github.com/mblancoa/authentication/core/tools"
+	"github.com/mblancoa/authentication/errors"
+	"github.com/mblancoa/authentication/tools"
 	"text/template"
 	"time"
 )
@@ -39,7 +39,7 @@ type authenticationService struct {
 func NewAuthenticationService(notificationService tools.NotificationService, userCredentialsRepository UserCredentialsRepository,
 	userRepository UserRepository) AuthenticationService {
 	service := authenticationService{
-		notificationsTemplates: template.Must(template.ParseGlob("templates/*.txt")),
+		notificationsTemplates: template.Must(template.ParseGlob("../templates/*.txt")),
 		notificationService:    notificationService,
 		credentialsRepository:  userCredentialsRepository,
 		userRepository:         userRepository,

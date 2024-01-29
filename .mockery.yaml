@@ -7,12 +7,10 @@ dir: "{{.PackageName}}"
 inpackage: True
 packages:
   github.com/mblancoa/authentication/core:
-    config:
-      dir: "./"
     interfaces:
       UserCredentialsRepository:
       UserRepository:
-  github.com/mblancoa/authentication/core/tools:
+  github.com/mblancoa/authentication/tools:
     interfaces:
       NotificationService:
 
