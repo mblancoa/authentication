@@ -67,7 +67,7 @@ func MarshalCrypt(obj, v any, secret string) error {
 	return nil
 }
 
-func UnMarshalCrypt(obj, v any, secret string) error {
+func UnmarshalCrypt(obj, v any, secret string) error {
 	oType := reflect.TypeOf(obj)
 	vValue := reflect.Indirect(reflect.ValueOf(v))
 

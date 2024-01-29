@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 )
 
 type CredentialState string
@@ -15,6 +16,7 @@ type User struct {
 	ID          string `crypt:"true"`
 	Email       string `crypt:"true"`
 	PhoneNumber string `crypt:"true"`
+	Roles       []string
 }
 type UserCredentials struct {
 	ID       string `hash:"true"`
@@ -25,6 +27,11 @@ type UserCredentials struct {
 type UserFullCredentials struct {
 	UserCredentials
 	LastPasswords []string
+}
+
+type CustomClaims struct {
+	jwt.StandardClaims
+	Roles []string `json:"roles"`
 }
 
 type ConfirmationCredentials struct {

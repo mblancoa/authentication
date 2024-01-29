@@ -29,7 +29,7 @@ func NewError(code ErrorCode, message string) error {
 func NewErrorf(code ErrorCode, format string, a ...any) error {
 	return basicError{
 		Code:    code,
-		Message: fmt.Sprintf(format, a),
+		Message: fmt.Sprintf(format, a...),
 	}
 }
 
@@ -55,7 +55,7 @@ func NewGenericError(message string) error {
 }
 
 func NewGenericErrorf(format string, a ...any) error {
-	return NewErrorf(Error, format, a)
+	return NewErrorf(Error, format, a...)
 }
 
 func NewGenericErrorByCause(message string, cause error) error {
@@ -67,7 +67,7 @@ func NewRuntimeError(message string) error {
 }
 
 func NewRuntimeErrorf(format string, a ...any) error {
-	return NewErrorf(RuntimeError, format, a)
+	return NewErrorf(RuntimeError, format, a...)
 }
 
 func NewRuntimeErrorByCause(message string, cause error) error {

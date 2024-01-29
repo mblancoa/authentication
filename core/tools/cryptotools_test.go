@@ -113,7 +113,7 @@ func TestMarshalCrypt(t *testing.T) {
 	assert.Equal(t, expected, result)
 }
 
-func TestUnMarshalCrypt_ok(t *testing.T) {
+func TestUnmarshalCrypt_ok(t *testing.T) {
 	type myStruct struct {
 		Prop1 string `crypt:"true"`
 		Prop2 string
@@ -126,12 +126,12 @@ func TestUnMarshalCrypt_ok(t *testing.T) {
 	expected := myStruct{prop, prop2}
 
 	var result myStruct
-	err := UnMarshalCrypt(str, &result, secret)
+	err := UnmarshalCrypt(str, &result, secret)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
-func TestUnMarshalCrypt_ko(t *testing.T) {
+func TestUnmarshalCrypt_ko(t *testing.T) {
 	type myStruct struct {
 		Prop1 string `crypt:"true"`
 		Prop2 string
@@ -144,10 +144,10 @@ func TestUnMarshalCrypt_ko(t *testing.T) {
 		Prop2: string(randstr.Bytes(16)),
 		Prop3: string(randstr.Bytes(16)),
 	}
-	expectedError := "Error decrypting field [[Prop3]]"
+	expectedError := "Error decrypting field Prop3"
 	var result myStruct
 
-	err := UnMarshalCrypt(str, &result, secret)
+	err := UnmarshalCrypt(str, &result, secret)
 
 	assert.Error(t, err)
 	assert.Equal(t, expectedError, err.Error())

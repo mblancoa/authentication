@@ -1,18 +1,23 @@
 package core
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/core/errors"
 	"github.com/mblancoa/authentication/core/tools"
 	"text/template"
+	"time"
 )
 
-// TODO extract Secret to a config file
-const Secret string = "a_*2$ñ6^fjz=?v^66€y7|~2ç"
+const (
+	// TODO extract Secret to a config file
+	Secret    string = "a_*2$ñ6^fjz=?v^66€y7|~2ç"
+	SecretJwt string = "$68tk91we&hzDyDhJe[Zz[{&"
+)
 
 // TODO review that, is it needed to be an interface?
 type AuthenticationService interface {
-	//TODO return jwt
-	Login(credentials UserCredentials) (User, error)
+	// Login checks the authenticity of the user and returns its jws
+	Login(credentials UserCredentials) (string, error)
 	StartSingUP(user User) error
 	SingUP(confirmation ConfirmationCredentials) error
 }
@@ -35,34 +40,34 @@ func NewAuthenticationService(notificationService tools.NotificationService, use
 	return &service
 }
 
-func (a *authenticationService) Login(credentials UserCredentials) (User, error) {
+func (a *authenticationService) Login(credentials UserCredentials) (string, error) {
 	var hashedCredentials UserCredentials
 	tools.MarshalHash(credentials, &hashedCredentials)
 	state, ok := a.credentialsRepository.ExistsUserCredentialsByIdAndPassword(hashedCredentials)
 	if !ok {
-		return User{}, errors.NewAuthenticationError("Credentials not found")
+		return "", errors.NewAuthenticationError("Credentials not found")
 	}
 	if state.State == Blocked {
-		return User{}, errors.NewAuthenticationError("User Blocked")
+		return "", errors.NewAuthenticationError("User Blocked")
 	}
 
 	id, err := tools.Encrypt(credentials.ID, Secret)
 	if err != nil {
-		return User{}, err
+		return "", err
 	}
 
 	user, err := a.userRepository.FindUserById(id)
 	if err != nil {
-		return User{}, err
+		return "", err
 	}
 
 	var decUser User
-	err = tools.UnMarshalCrypt(user, &decUser, Secret)
+	err = tools.UnmarshalCrypt(user, &decUser, Secret)
 	if err != nil {
-		return User{}, err
+		return "", err
 	}
 
-	return decUser, nil
+	return getJwt(decUser, SecretJwt)
 }
 
 func (a *authenticationService) StartSingUP(user User) error {
@@ -73,4 +78,29 @@ func (a *authenticationService) StartSingUP(user User) error {
 func (a *authenticationService) SingUP(confirmation ConfirmationCredentials) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+func getJwt(user User, key string) (string, error) {
+	claims := CustomClaims{
+		jwt.StandardClaims{
+			Id:        user.ID,
+			ExpiresAt: time.Now().Add(time.Minute * time.Duration(10)).Unix(),
+		},
+		user.Roles,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(key))
+}
+
+func decodeJWT(token string, key string) (*CustomClaims, error) {
+	var claims CustomClaims // custom claims
+	_, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) {
+		return []byte(key), nil // using a config struct to handle the secret
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &claims, nil
 }
