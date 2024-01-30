@@ -2,11 +2,8 @@ name: Development
 run-name: ${{ github.actor }} is testing out GitHub Actions
 on: [push]
 jobs:
-  build:
+  Explore-GitHub-Actions:
     runs-on: ubuntu-latest
-    outputs:
-      digests: ${{ steps.hash.outputs.digests }}
-
     steps:
       - name: Setup Go environment
         uses: actions/setup-go@v5.0.0
