@@ -9,7 +9,7 @@ jobs:
         uses: actions/setup-go@v5.0.0
         
       - name: Update dependencies
-        run: go mod download
+        uses: actions/setup-go@v5
         
       - name: Setup Mockery
         run: go install github.com/vektra/mockery/v2@v2.40.1
