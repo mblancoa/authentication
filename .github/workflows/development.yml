@@ -11,8 +11,8 @@ jobs:
       - name: Update dependencies
         uses: actions/setup-go@v5
         
-      #- name: Setup Mockery
-      #  run: go install github.com/vektra/mockery/v2@v2.40.1
+      - name: Setup Mockery
+        run: go install github.com/vektra/mockery/v2@v2.40.1
         
       - name: Generate mocks
         run: mockery
