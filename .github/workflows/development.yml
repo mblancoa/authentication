@@ -1,5 +1,5 @@
 name: Development
-run-name: ${{ github.actor }} is testing out GitHub Actions.
+run-name: ${{ github.actor }} is running Development workflow
 on: [push]
 jobs:
   Explore-GitHub-Actions:
@@ -9,7 +9,7 @@ jobs:
         uses: actions/setup-go@v5.0.0
         
       - name: Update dependencies
-        uses: actions/go-dependency-submission@v2.0.0
+        run: go mod download
         
       - name: Setup Mockery
         run: go install github.com/vektra/mockery/v2@v2.40.1
