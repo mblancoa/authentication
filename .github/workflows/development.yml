@@ -5,11 +5,13 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Go environment
-        uses: actions/setup-go@v5.0.0
+      - uses: actions/checkout@v5
+        
+      - name: Setup Go
+        uses: actions/setup-go@v5
         
       - name: Update dependencies
-        uses: actions/setup-go@v5
+        run: go mod download
         
       - name: Setup Mockery
         run: go install github.com/vektra/mockery/v2@v2.40.1
