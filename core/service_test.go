@@ -13,17 +13,17 @@ import (
 
 type AuthenticationServiceSuite struct {
 	suite.Suite
-	notificationService   *tools.MockNotificationService
-	credentialsRepository *MockUserCredentialsRepository
-	userRepository        *MockUserRepository
-	authenticationService AuthenticationService
+	notificationService           *tools.MockNotificationService
+	credentialsPersistenceService *MockUserCredentialsPersistenceService
+	userPersistenceService        *MockUserPersistenceService
+	authenticationService         AuthenticationService
 }
 
 func (suite *AuthenticationServiceSuite) SetupTest() {
 	suite.notificationService = tools.NewMockNotificationService(suite.T())
-	suite.credentialsRepository = NewMockUserCredentialsRepository(suite.T())
-	suite.userRepository = NewMockUserRepository(suite.T())
-	suite.authenticationService = NewAuthenticationService(suite.notificationService, suite.credentialsRepository, suite.userRepository)
+	suite.credentialsPersistenceService = NewMockUserCredentialsPersistenceService(suite.T())
+	suite.userPersistenceService = NewMockUserPersistenceService(suite.T())
+	suite.authenticationService = NewAuthenticationService(suite.notificationService, suite.credentialsPersistenceService, suite.userPersistenceService)
 }
 
 func TestAuthenticationServiceSuite(t *testing.T) {
@@ -44,8 +44,8 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
+	suite.credentialsPersistenceService.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.userPersistenceService.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -72,8 +72,8 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	user.ID = id
 	expectedError := "Error decrypting field Email"
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(id).Return(user, nil)
+	suite.credentialsPersistenceService.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(user, nil)
 
 	u, err := suite.authenticationService.Login(credentials)
 
@@ -93,8 +93,8 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 	id, _ := tools.Encrypt(credentials.ID, Secret)
 	expectedError := errors.NewNotFoundError("User not found")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(id).Return(User{}, expectedError)
+	suite.credentialsPersistenceService.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -113,7 +113,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	returnedCredentials.State = Blocked
 	expectedError := errors.NewAuthenticationError("User Blocked")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -129,7 +129,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredenti
 	tools.MarshalHash(credentials, &hashCredentials)
 	expectedError := errors.NewAuthenticationError("Credentials not found")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(UserCredentials{}, false)
+	suite.credentialsPersistenceService.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(UserCredentials{}, false)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 

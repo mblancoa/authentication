@@ -30,19 +30,19 @@ type AuthenticationService interface {
 }
 
 type authenticationService struct {
-	notificationsTemplates *template.Template
-	notificationService    tools.NotificationService
-	credentialsRepository  UserCredentialsRepository
-	userRepository         UserRepository
+	notificationsTemplates        *template.Template
+	notificationService           tools.NotificationService
+	credentialsPersistenceService UserCredentialsPersistenceService
+	userPersistenceService        UserPersistenceService
 }
 
-func NewAuthenticationService(notificationService tools.NotificationService, userCredentialsRepository UserCredentialsRepository,
-	userRepository UserRepository) AuthenticationService {
+func NewAuthenticationService(notificationService tools.NotificationService, userCredentialsPersistenceService UserCredentialsPersistenceService,
+	userPersistenceService UserPersistenceService) AuthenticationService {
 	service := authenticationService{
-		notificationsTemplates: template.Must(template.ParseGlob("../templates/*.txt")),
-		notificationService:    notificationService,
-		credentialsRepository:  userCredentialsRepository,
-		userRepository:         userRepository,
+		notificationsTemplates:        template.Must(template.ParseGlob("../templates/*.txt")),
+		notificationService:           notificationService,
+		credentialsPersistenceService: userCredentialsPersistenceService,
+		userPersistenceService:        userPersistenceService,
 	}
 	return &service
 }
@@ -50,7 +50,7 @@ func NewAuthenticationService(notificationService tools.NotificationService, use
 func (a *authenticationService) Login(credentials UserCredentials) (string, error) {
 	var hashedCredentials UserCredentials
 	tools.MarshalHash(credentials, &hashedCredentials)
-	state, ok := a.credentialsRepository.ExistsUserCredentialsByIdAndPassword(hashedCredentials)
+	state, ok := a.credentialsPersistenceService.ExistsUserCredentialsByIdAndPassword(hashedCredentials)
 	if !ok {
 		return "", errors.NewAuthenticationError("Credentials not found")
 	}
@@ -63,7 +63,7 @@ func (a *authenticationService) Login(credentials UserCredentials) (string, erro
 		return "", err
 	}
 
-	user, err := a.userRepository.FindUserById(id)
+	user, err := a.userPersistenceService.FindUserById(id)
 	if err != nil {
 		return "", err
 	}

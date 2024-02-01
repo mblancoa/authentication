@@ -1,6 +1,7 @@
 package core
 
-type UserCredentialsRepository interface {
+// UserCredentialsPersistenceService defines operations related to the user credentials persistence
+type UserCredentialsPersistenceService interface {
 
 	// ExistsUserCredentialsByIdAndPassword confirms if exits any credentials like the argument in database
 	// credentials must be hashed
@@ -18,7 +19,8 @@ type UserCredentialsRepository interface {
 	UpdateUserCredentials(credentials UserFullCredentials) error
 }
 
-type UserRepository interface {
+// UserPersistenceService defines operations related to the users persistence
+type UserPersistenceService interface {
 	// FindUserById returns the user found in db. If not found, user will be empty and error not nil
 	// id must be encrypted and the returned user will be encrypted
 	FindUserById(id string) (User, error)

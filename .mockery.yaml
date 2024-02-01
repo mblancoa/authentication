@@ -8,8 +8,8 @@ inpackage: True
 packages:
   github.com/mblancoa/authentication/core:
     interfaces:
-      UserCredentialsRepository:
-      UserRepository:
+      UserCredentialsPersistenceService:
+      UserPersistenceService:
   github.com/mblancoa/authentication/tools:
     interfaces:
       NotificationService:

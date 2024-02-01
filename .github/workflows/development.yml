@@ -2,7 +2,7 @@ name: Development
 run-name: ${{ github.actor }} is running Development workflow
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  Push-action:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,16 +13,9 @@ jobs:
           go-version: '1.21.3'
       - name: Update dependencies
         run: go mod download
-        
       - name: Setup Mockery
         run: go install github.com/vektra/mockery/v2@v2.40.1
-        
       - name: Generate mocks
         run: mockery
-
       - name: Test execution
         run: go test ./...
-
-      - name: Clean
-        run: make clean
- 
