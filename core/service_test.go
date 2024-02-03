@@ -19,7 +19,7 @@ type AuthenticationServiceSuite struct {
 	authenticationService         AuthenticationService
 }
 
-func (suite *AuthenticationServiceSuite) SetupTest() {
+func (suite *AuthenticationServiceSuite) SetupSuite() {
 	suite.notificationService = tools.NewMockNotificationService(suite.T())
 	suite.credentialsPersistenceService = NewMockCredentialsPersistenceService(suite.T())
 	suite.userPersistenceService = NewMockUserPersistenceService(suite.T())

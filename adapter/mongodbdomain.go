@@ -5,11 +5,9 @@ import (
 	"time"
 )
 
-type Collection string
-
 const (
-	CredentialsCollection Collection = "credentials"
-	UserCollection                   = "users"
+	CredentialsCollection string = "credentials"
+	UserCollection               = "users"
 )
 
 type UserDB struct {
@@ -19,7 +17,8 @@ type UserDB struct {
 	Roles       []string  `bson:"roles,omitempty"`
 	Last        time.Time `bson:"last"`
 }
-type Credentials struct {
+
+type CredentialsDB struct {
 	ID            string               `bson:"id"`
 	Password      string               `bson:"password"`
 	State         core.CredentialState `bson:"state"`

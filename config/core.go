@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/devfeel/mapper"
 	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/tools"
 	"io"
@@ -18,6 +19,17 @@ var authenticationService core.AuthenticationService
 func SetupCoreConfiguration() {
 	// TODO initialize notificationService
 	authenticationService = core.NewAuthenticationService(notificationService, credentialsPersistenceService, userPersistenceService)
+
+	SetupCoreMappers()
+}
+
+func SetupCoreMappers() {
+	err := mapper.Register(&core.FullCredentials{})
+	manageErrorPanic(err)
+	err = mapper.Register(&core.Credentials{})
+	manageErrorPanic(err)
+	err = mapper.Register(&core.User{})
+	manageErrorPanic(err)
 }
 
 func loadConfiguration(configObj any, file string) {

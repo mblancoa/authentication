@@ -32,7 +32,7 @@ type Credentials struct {
 	State    CredentialState
 }
 
-type UserFullCredentials struct {
+type FullCredentials struct {
 	Credentials
 	LastPasswords []string
 }

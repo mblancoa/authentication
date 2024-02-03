@@ -11,12 +11,12 @@ type CredentialsPersistenceService interface {
 	// credentials must be hashed
 	InsertCredentials(credentials Credentials) (Credentials, error)
 
-	// FindCredentialsById Returns the userFullCredentials found in db. If not found, userFullCredentials will be empty and error not nil
-	// id must be hashed and the returned userFullCredentials will be hashed
-	FindCredentialsById(credentials UserFullCredentials) (UserFullCredentials, error)
+	// FindCredentialsById Returns the fullCredentials found in db. If not found, fullCredentials will be empty and error not nil
+	// id must be hashed and the returned fullCredentials will be hashed
+	FindCredentialsById(credentials FullCredentials) (FullCredentials, error)
 
-	// UpdateCredentials modifies the userFullCredentials with the new data
-	UpdateCredentials(credentials UserFullCredentials) error
+	// UpdateCredentials modifies the fullCredentials with the new data
+	UpdateCredentials(credentials FullCredentials) error
 }
 
 // UserPersistenceService defines operations related to the users persistence

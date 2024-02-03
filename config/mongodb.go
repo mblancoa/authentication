@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"fmt"
+	"github.com/devfeel/mapper"
 	"github.com/mblancoa/authentication/adapter"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,4 +30,13 @@ func SetupMongoDBConfiguration() {
 	mongoDbUserRepository = adapter.NewMongoDbUserRepository(database)
 	credentialsPersistenceService = adapter.NewMongoDbCredentialsService(mongoDbCredentialsRepository)
 	userPersistenceService = adapter.NewMongoDbUserService(mongoDbUserRepository)
+
+	SetupMongoDBMappers()
+}
+
+func SetupMongoDBMappers() {
+	err := mapper.Register(&adapter.UserDB{})
+	manageErrorPanic(err)
+	err = mapper.Register(&adapter.CredentialsDB{})
+	manageErrorPanic(err)
 }
