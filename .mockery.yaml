@@ -8,7 +8,7 @@ inpackage: True
 packages:
   github.com/mblancoa/authentication/core:
     interfaces:
-      UserCredentialsPersistenceService:
+      CredentialsPersistenceService:
       UserPersistenceService:
   github.com/mblancoa/authentication/tools:
     interfaces:

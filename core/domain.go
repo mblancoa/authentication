@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	EmailNotificationEmailConfirmationTemplate     = "emailEmailConfirmation.txt"
+	SMSNotificationPhoneNumberConfirmationTemplate = "smsPhoneConfirmation.txt"
+	EmailNotificationOtp                           = "emailOtp.txt"
+	SMSNotificationOtp                             = "smsOtp.txt"
+)
+
 type CredentialState string
 
 const (
@@ -19,14 +26,14 @@ type User struct {
 	PhoneNumber string `crypt:"true"`
 	Roles       []string
 }
-type UserCredentials struct {
+type Credentials struct {
 	ID       string `hash:"true"`
 	Password string `hash:"true"`
 	State    CredentialState
 }
 
 type UserFullCredentials struct {
-	UserCredentials
+	Credentials
 	LastPasswords []string
 }
 
@@ -52,6 +59,6 @@ func (u User) String() string {
 	}
 	return fmt.Sprintf("User: {\n\tID: %s,\n\tEmail: %s,\n\tPhoneNumber: %s,\n\tRoles: %s,\n}", u.ID, u.Email, u.PhoneNumber, roles)
 }
-func (u UserCredentials) String() string {
-	return fmt.Sprintf("UserCredentials: {\n\tID: %s,\n\tPassword: %s,\n\tState: %s,\n}", u.ID, u.Password, u.State)
+func (u Credentials) String() string {
+	return fmt.Sprintf("Credentials: {\n\tID: %s,\n\tPassword: %s,\n\tState: %s,\n}", u.ID, u.Password, u.State)
 }

@@ -1,22 +1,22 @@
 package core
 
-// UserCredentialsPersistenceService defines operations related to the user credentials persistence
-type UserCredentialsPersistenceService interface {
+// CredentialsPersistenceService defines operations related to the user credentials persistence
+type CredentialsPersistenceService interface {
 
-	// ExistsUserCredentialsByIdAndPassword confirms if exits any credentials like the argument in database
+	// ExistsCredentialsByIdAndPassword confirms if exits any credentials like the argument in database
 	// credentials must be hashed
-	ExistsUserCredentialsByIdAndPassword(credentials UserCredentials) (UserCredentials, bool)
+	ExistsCredentialsByIdAndPassword(credentials Credentials) (Credentials, bool)
 
-	// InsertUserCredentials inserts a new user credentials record into database
+	// InsertCredentials inserts a new user credentials record into database
 	// credentials must be hashed
-	InsertUserCredentials(credentials UserCredentials) (UserCredentials, error)
+	InsertCredentials(credentials Credentials) (Credentials, error)
 
-	// FindUserCredentialsById Returns the userFullCredentials found in db. If not found, userFullCredentials will be empty and error not nil
+	// FindCredentialsById Returns the userFullCredentials found in db. If not found, userFullCredentials will be empty and error not nil
 	// id must be hashed and the returned userFullCredentials will be hashed
-	FindUserCredentialsById(credentials UserFullCredentials) (UserFullCredentials, error)
+	FindCredentialsById(credentials UserFullCredentials) (UserFullCredentials, error)
 
-	// UpdateUserCredentials modifies the userFullCredentials with the new data
-	UpdateUserCredentials(credentials UserFullCredentials) error
+	// UpdateCredentials modifies the userFullCredentials with the new data
+	UpdateCredentials(credentials UserFullCredentials) error
 }
 
 // UserPersistenceService defines operations related to the users persistence

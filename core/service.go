@@ -17,7 +17,7 @@ const (
 // TODO review that, is it needed to be an interface?
 type AuthenticationService interface {
 	// Login checks the authenticity of the user and returns its jws
-	Login(credentials UserCredentials) (string, error)
+	Login(credentials Credentials) (string, error)
 
 	// ValidateJWT validates a given jwt
 	ValidateJWT(jwt string) (bool, error)
@@ -32,25 +32,25 @@ type AuthenticationService interface {
 type authenticationService struct {
 	notificationsTemplates        *template.Template
 	notificationService           tools.NotificationService
-	credentialsPersistenceService UserCredentialsPersistenceService
+	credentialsPersistenceService CredentialsPersistenceService
 	userPersistenceService        UserPersistenceService
 }
 
-func NewAuthenticationService(notificationService tools.NotificationService, userCredentialsPersistenceService UserCredentialsPersistenceService,
+func NewAuthenticationService(notificationService tools.NotificationService, credentialsPersistenceService CredentialsPersistenceService,
 	userPersistenceService UserPersistenceService) AuthenticationService {
 	service := authenticationService{
 		notificationsTemplates:        template.Must(template.ParseGlob("../templates/*.txt")),
 		notificationService:           notificationService,
-		credentialsPersistenceService: userCredentialsPersistenceService,
+		credentialsPersistenceService: credentialsPersistenceService,
 		userPersistenceService:        userPersistenceService,
 	}
 	return &service
 }
 
-func (a *authenticationService) Login(credentials UserCredentials) (string, error) {
-	var hashedCredentials UserCredentials
+func (a *authenticationService) Login(credentials Credentials) (string, error) {
+	var hashedCredentials Credentials
 	tools.MarshalHash(credentials, &hashedCredentials)
-	state, ok := a.credentialsPersistenceService.ExistsUserCredentialsByIdAndPassword(hashedCredentials)
+	state, ok := a.credentialsPersistenceService.ExistsCredentialsByIdAndPassword(hashedCredentials)
 	if !ok {
 		return "", errors.NewAuthenticationError("Credentials not found")
 	}

@@ -1,62 +1,70 @@
 package adapter
 
-import "github.com/mblancoa/authentication/core"
+import (
+	"context"
+	"github.com/mblancoa/authentication/core"
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
-type MongoDbUserCredentialsRepository struct {
+type MongoDbCredentialsRepository struct {
+	collection *mongo.Collection
 }
 
-func NewMongoDbUserCredentialsRepository() *MongoDbUserCredentialsRepository {
-	return &MongoDbUserCredentialsRepository{}
+func NewMongoDbCredentialsRepository(database *mongo.Database) *MongoDbCredentialsRepository {
+	collection := database.Collection(CredentialsCollection)
+	return &MongoDbCredentialsRepository{collection: collection}
 }
 
-func (m *MongoDbUserCredentialsRepository) ExistsUserCredentialsByIdAndPassword(credentials core.UserCredentials) (core.UserCredentials, bool) {
+func (m *MongoDbCredentialsRepository) ExistsCredentialsByIdAndPassword(ctx context.Context, credentials core.Credentials) (core.Credentials, bool) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserCredentialsRepository) InsertUserCredentials(credentials core.UserCredentials) (core.UserCredentials, error) {
+func (m *MongoDbCredentialsRepository) InsertCredentials(ctx context.Context, credentials core.Credentials) (core.Credentials, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserCredentialsRepository) FindUserCredentialsById(credentials core.UserFullCredentials) (core.UserFullCredentials, error) {
+func (m *MongoDbCredentialsRepository) FindCredentialsById(ctx context.Context, credentials core.UserFullCredentials) (core.UserFullCredentials, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserCredentialsRepository) UpdateUserCredentials(credentials core.UserFullCredentials) error {
+func (m *MongoDbCredentialsRepository) UpdateCredentials(ctx context.Context, credentials core.UserFullCredentials) error {
 	//TODO implement me
 	panic("implement me")
 }
 
 type MongoDbUserRepository struct {
+	collection *mongo.Collection
 }
 
-func NewMongoDbUserRepository() *MongoDbUserRepository {
-	return &MongoDbUserRepository{}
+func NewMongoDbUserRepository(database *mongo.Database) *MongoDbUserRepository {
+	collection := database.Collection(CredentialsCollection)
+	return &MongoDbUserRepository{collection: collection}
 }
 
-func (m *MongoDbUserRepository) FindUserById(id string) (core.User, error) {
+func (m *MongoDbUserRepository) FindUserById(ctx context.Context, id string) (core.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m MongoDbUserRepository) FindUserByEmail(email string) (core.User, error) {
+func (m *MongoDbUserRepository) FindUserByEmail(ctx context.Context, email string) (core.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserRepository) FindUserByPhoneNumber(phoneNumber string) (core.User, error) {
+func (m *MongoDbUserRepository) FindUserByPhoneNumber(ctx context.Context, phoneNumber string) (core.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserService) InsertUser(user core.User) (core.User, error) {
+func (m *MongoDbUserRepository) InsertUser(ctx context.Context, user core.User) (core.User, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (m *MongoDbUserRepository) UpdateUser(user core.User) (core.User, error) {
+func (m *MongoDbUserRepository) UpdateUser(ctx context.Context, user core.User) (core.User, error) {
 	//TODO implement me
 	panic("implement me")
 }

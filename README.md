@@ -1,7 +1,29 @@
 # Authentication
 ## Packages
+```
+Authentication
+|-- errors
+|   |-- error.go
+|
+|-- core
+|   |-- domain.go
+|   |-- service.go
+|   |-- port.go
+|
+|-- adapter
+|   |-- mongodb.go
+|   |-- mongodbrepository.go
+|
+|-- config
+|   |-- domain.go
+|   |-- core.go
+|   |-- mongodb.go
+|
+|-- main.go
+```
 - **core**: contains the application domain entities, the services and interfaces which implement and define the business logic.
-- **repository-mongodb**: repository implementation to persist data into a mongodb database
+- **adapter**: implementation of interfaces in port.go
+
 
 ## Mocks generation
 Installation
