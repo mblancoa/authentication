@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-var mongoDbCredentialsRepository *adapter.MongoDbCredentialsRepository
-var mongoDbUserRepository *adapter.MongoDbUserRepository
+var mongoDbCredentialsRepository *adapter.mongoDbCredentialsRepository
+var mongoDbUserRepository *adapter.mongoDbUserRepository
 
 // TODO
 

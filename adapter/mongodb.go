@@ -7,10 +7,10 @@ import (
 )
 
 type MongoDbCredentialsService struct {
-	credentialsRepository *MongoDbCredentialsRepository
+	credentialsRepository *mongoDbCredentialsRepository
 }
 
-func NewMongoDbCredentialsService(credentialsRepository *MongoDbCredentialsRepository) core.CredentialsPersistenceService {
+func NewMongoDbCredentialsService(credentialsRepository *mongoDbCredentialsRepository) core.CredentialsPersistenceService {
 	return &MongoDbCredentialsService{credentialsRepository: credentialsRepository}
 }
 
@@ -63,10 +63,10 @@ func (m *MongoDbCredentialsService) UpdateCredentials(credentials core.FullCrede
 }
 
 type MongoDbUserService struct {
-	userRepository *MongoDbUserRepository
+	userRepository *mongoDbUserRepository
 }
 
-func NewMongoDbUserService(userRepository *MongoDbUserRepository) core.UserPersistenceService {
+func NewMongoDbUserService(userRepository *mongoDbUserRepository) core.UserPersistenceService {
 	return &MongoDbUserService{userRepository: userRepository}
 }
 
