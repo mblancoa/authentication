@@ -14,7 +14,8 @@ jobs:
       - name: Update dependencies
         run: go mod download
       - name: Code generation
-        run: make code-generation
+        run: go install github.com/sunboyy/repogen@latest
+             make code-generation
       - name: Setup Mockery
         run: go install github.com/vektra/mockery/v2@v2.40.1
       - name: Generate mocks
