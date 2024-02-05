@@ -9,5 +9,5 @@ all: True
 packages:
   github.com/mblancoa/authentication/core:
   github.com/mblancoa/authentication/tools:
-  github.com/mblancoa/authentication/adapter:
+#  github.com/mblancoa/authentication/adapter:
 # Lots more config...

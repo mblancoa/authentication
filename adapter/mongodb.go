@@ -7,44 +7,43 @@ import (
 )
 
 type MongoDbCredentialsService struct {
-	credentialsRepository *mongoDbCredentialsRepository
+	credentialsRepository MongoDbCredentialsRepository
 }
 
-func NewMongoDbCredentialsService(credentialsRepository *mongoDbCredentialsRepository) core.CredentialsPersistenceService {
+func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsRepository) core.CredentialsPersistenceService {
 	return &MongoDbCredentialsService{credentialsRepository: credentialsRepository}
 }
 
 func (m *MongoDbCredentialsService) ExistsCredentialsByIdAndPassword(credentials core.Credentials) (core.Credentials, bool) {
-	var credentialsDB CredentialsDB
-	tools.Mapper(credentials, &credentialsDB)
-
-	credentialsDB, ok := m.credentialsRepository.ExistsCredentialsByIdAndPassword(context.Background(), credentialsDB)
+	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), credentials.ID)
+	if err != nil {
+		return core.Credentials{}, false
+	}
 	var result core.Credentials
 	tools.Mapper(credentialsDB, &result)
 
-	return result, ok
+	return result, true
 }
 
 func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentials) (core.Credentials, error) {
+	ctx := context.Background()
 	var credentialsDB CredentialsDB
 	tools.Mapper(credentials, &credentialsDB)
 
-	credentialsDB, err := m.credentialsRepository.InsertCredentials(context.Background(), credentialsDB)
+	_, err := m.credentialsRepository.InsertOne(ctx, &credentialsDB)
 	if err != nil {
 		return core.Credentials{}, err
 	}
 
+	insertionDB, err := m.credentialsRepository.FindById(ctx, credentials.ID)
 	var result core.Credentials
-	tools.Mapper(credentialsDB, &result)
+	tools.Mapper(insertionDB, &result)
 
 	return result, nil
 }
 
 func (m *MongoDbCredentialsService) FindCredentialsById(credentials core.FullCredentials) (core.FullCredentials, error) {
-	var credentialsDB CredentialsDB
-	tools.Mapper(credentials, &credentialsDB)
-
-	credentialsDB, err := m.credentialsRepository.FindCredentialsById(context.Background(), credentialsDB)
+	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), credentials.ID)
 	if err != nil {
 		return core.FullCredentials{}, err
 	}
@@ -59,19 +58,20 @@ func (m *MongoDbCredentialsService) UpdateCredentials(credentials core.FullCrede
 	var credentialsDB CredentialsDB
 	tools.Mapper(credentials, &credentialsDB)
 
-	return m.credentialsRepository.UpdateCredentials(context.Background(), credentialsDB)
+	_, err := m.credentialsRepository.UpdateById(context.Background(), &credentialsDB, credentials.ID)
+	return err
 }
 
 type MongoDbUserService struct {
-	userRepository *mongoDbUserRepository
+	userRepository MongoDbUserRepository
 }
 
-func NewMongoDbUserService(userRepository *mongoDbUserRepository) core.UserPersistenceService {
+func NewMongoDbUserService(userRepository MongoDbUserRepository) core.UserPersistenceService {
 	return &MongoDbUserService{userRepository: userRepository}
 }
 
 func (m *MongoDbUserService) FindUserById(id string) (core.User, error) {
-	userDB, err := m.userRepository.FindUserById(context.Background(), id)
+	userDB, err := m.userRepository.FindById(context.Background(), id)
 	if err != nil {
 		return core.User{}, err
 	}
@@ -83,7 +83,7 @@ func (m *MongoDbUserService) FindUserById(id string) (core.User, error) {
 }
 
 func (m *MongoDbUserService) FindUserByEmail(email string) (core.User, error) {
-	userDB, err := m.userRepository.FindUserByEmail(context.Background(), email)
+	userDB, err := m.userRepository.FindByEmail(context.Background(), email)
 	if err != nil {
 		return core.User{}, err
 	}
@@ -95,7 +95,7 @@ func (m *MongoDbUserService) FindUserByEmail(email string) (core.User, error) {
 }
 
 func (m *MongoDbUserService) FindUserByPhoneNumber(phoneNumber string) (core.User, error) {
-	userDB, err := m.userRepository.FindUserByPhoneNumber(context.Background(), phoneNumber)
+	userDB, err := m.userRepository.FindByPhoneNumber(context.Background(), phoneNumber)
 	if err != nil {
 		return core.User{}, err
 	}
@@ -107,31 +107,11 @@ func (m *MongoDbUserService) FindUserByPhoneNumber(phoneNumber string) (core.Use
 }
 
 func (m *MongoDbUserService) InsertUser(user core.User) (core.User, error) {
-	var userDB UserDB
-	tools.Mapper(user, &userDB)
-
-	userDB, err := m.userRepository.InsertUser(context.Background(), user)
-	if err != nil {
-		return core.User{}, err
-	}
-
-	var result core.User
-	tools.Mapper(userDB, &result)
-
-	return result, nil
+	//TODO
+	panic("implement me")
 }
 
 func (m *MongoDbUserService) UpdateUser(user core.User) (core.User, error) {
-	var userDB UserDB
-	tools.Mapper(user, &userDB)
-
-	userDB, err := m.userRepository.UpdateUser(context.Background(), user)
-	if err != nil {
-		return core.User{}, err
-	}
-
-	var result core.User
-	tools.Mapper(userDB, &result)
-
-	return result, nil
+	//TODO
+	panic("implement me")
 }

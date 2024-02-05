@@ -2,3 +2,4 @@
 .project
 .idea/
 Mock*.go
+*_impl.go

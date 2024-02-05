@@ -24,12 +24,17 @@ Authentication
 - **core**: contains the application domain entities, the services and interfaces which implement and define the business logic.
 - **adapter**: implementation of interfaces in port.go
 
+## Repositories generation
+
+Installation 
+>`go install github.com/sunboyy/repogen@latest`
+
+Generation
+>`go generate`
 
 ## Mocks generation
 Installation
-
 >`go install github.com/vektra/mockery/v2@v2.40.1`
 
 Generation
-
 >`mockery`

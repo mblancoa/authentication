@@ -10,10 +10,8 @@ import (
 	"os"
 )
 
-var mongoDbCredentialsRepository *adapter.mongoDbCredentialsRepository
-var mongoDbUserRepository *adapter.mongoDbUserRepository
-
-// TODO
+var mongoDbCredentialsRepository adapter.MongoDbCredentialsRepository
+var mongoDbUserRepository adapter.MongoDbUserRepository
 
 // SetupMongoDBConfiguration sets mongodb configuration
 func SetupMongoDBConfiguration() {
@@ -26,8 +24,8 @@ func SetupMongoDBConfiguration() {
 	manageErrorPanic(err)
 
 	database := client.Database(config.Database.Name)
-	mongoDbCredentialsRepository = adapter.NewMongoDbCredentialsRepository(database)
-	mongoDbUserRepository = adapter.NewMongoDbUserRepository(database)
+	mongoDbCredentialsRepository = adapter.NewMongoDbCredentialsRepository(database.Collection(adapter.CredentialsCollection))
+	mongoDbUserRepository = adapter.NewMongoDbUserRepository(database.Collection(adapter.UserCollection))
 	credentialsPersistenceService = adapter.NewMongoDbCredentialsService(mongoDbCredentialsRepository)
 	userPersistenceService = adapter.NewMongoDbUserService(mongoDbUserRepository)
 
