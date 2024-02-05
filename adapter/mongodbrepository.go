@@ -44,4 +44,6 @@ type MongoDbUserRepository interface {
 	FindByPhoneNumber(ctx context.Context, phoneNumber string) (*UserDB, error)
 	InsertOne(ctx context.Context, user *UserDB) (interface{}, error)
 	UpdateById(ctx context.Context, user *UserDB, id string) (bool, error)
+	UpdateEmailById(ctx context.Context, email, id string) (bool, error)
+	UpdatePhoneNumberById(ctx context.Context, phoneNumber, id string) (bool, error)
 }
