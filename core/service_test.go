@@ -1,11 +1,10 @@
 package core
 
-// Basic imports
 import (
-	"github.com/brianvoe/gofakeit"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
+	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -32,13 +31,13 @@ func TestAuthenticationServiceSuite(t *testing.T) {
 
 func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var credentials Credentials
-	gofakeit.Struct(&credentials)
+	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 	returnedCredentials.State = Active
 	var user User
-	gofakeit.Struct(&user)
+	tools.FakerBuild(&user)
 	user.UserId = credentials.UserId
 	user.Roles = []string{"admin", "customer"}
 	var encUser User
@@ -60,14 +59,14 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	var credentials Credentials
-	gofakeit.Struct(&credentials)
+	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
 	var user User
-	gofakeit.Struct(&user)
+	tools.FakerBuild(&user)
 	id, _ := tools.Encrypt(credentials.UserId, Secret)
 	user.UserId = id
 	expectedError := "Error decrypting field Email"
@@ -84,7 +83,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByUserIdReturnsError() {
 	var credentials Credentials
-	gofakeit.Struct(&credentials)
+	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
@@ -105,7 +104,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByUserIdRetur
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	var credentials Credentials
-	gofakeit.Struct(&credentials)
+	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
@@ -124,7 +123,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenCheckCredentialsFails() {
 	var credentials Credentials
-	gofakeit.Struct(&credentials)
+	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	expectedError := errors.NewAuthenticationError("Credentials not found")
@@ -140,7 +139,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenCheckCredentialsFails
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
 	var user User
-	gofakeit.Struct(&user)
+	tools.FakerBuild(&user)
 	j, _ := getJwtFromUser(user, SecretJwt)
 
 	result, err := suite.authenticationService.ValidateJWT(j)
@@ -151,7 +150,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT() {
 	var wToken string
-	gofakeit.Struct(&wToken)
+	tools.FakerBuild(&wToken)
 
 	result, err := suite.authenticationService.ValidateJWT(wToken)
 
@@ -161,7 +160,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT
 }
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired() {
-	id := gofakeit.Username()
+	id := faker.Username()
 
 	claims := CustomClaims{
 		jwt.StandardClaims{
@@ -180,7 +179,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired(
 }
 
 func (suite *AuthenticationServiceSuite) TestRefreshJWT_successful() {
-	id := gofakeit.Username()
+	id := faker.Username()
 
 	claims := CustomClaims{
 		jwt.StandardClaims{

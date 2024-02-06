@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/tools"
 	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -35,7 +36,7 @@ func TestCredentialsServiceSuite(t *testing.T) {
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_successful() {
 	db := CredentialsDB{}
 	err := faker.Build(&db)
-	manageTestError(err)
+	tools.ManageTestError(err)
 	db.Attempts = 1
 	db.State = core.Active
 
@@ -58,7 +59,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_suc
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentiaslWhenCredentialsGetsBlocked() {
 	db := CredentialsDB{}
 	err := faker.Build(&db)
-	manageTestError(err)
+	tools.ManageTestError(err)
 	db.Attempts = 2
 	db.State = core.Active
 
@@ -80,7 +81,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentialsWhenCredentialsWasBlocked() {
 	db := CredentialsDB{}
 	err := faker.Build(&db)
-	manageTestError(err)
+	tools.ManageTestError(err)
 	db.Attempts = 1
 	db.State = core.Blocked
 
@@ -102,7 +103,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsErrorWhenCredentialsNotFound() {
 	credentials := core.Credentials{}
 	err := faker.Build(&credentials)
-	manageTestError(err)
+	tools.ManageTestError(err)
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
