@@ -3,10 +3,8 @@ package adapter
 import (
 	"context"
 	"github.com/mblancoa/authentication/core"
-	"github.com/mblancoa/authentication/errors"
 	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
-	"reflect"
 	"testing"
 )
 
@@ -57,7 +55,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_suc
 	suite.Assert().Equal(0, updated.Attempts)
 }
 
-func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsErrorWhenCredentialsGetsBlocked() {
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentiaslWhenCredentialsGetsBlocked() {
 	db := CredentialsDB{}
 	err := faker.Build(&db)
 	manageTestError(err)
@@ -69,11 +67,9 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
-	suite.Assert().Error(err)
-	suite.Assert().Equal("Authentication error", err.Error())
-	suite.Assert().Equal("BasicError", reflect.TypeOf(err).Name())
-	suite.Assert().Equal(errors.AuthenticationError, err.(errors.BasicError).Code)
-	suite.Assert().Empty(result)
+	suite.Assert().NoError(err)
+	suite.Assert().NotEmpty(result)
+	suite.Assert().Equal(core.Blocked, result.State)
 
 	updated := CredentialsDB{}
 	findOne(suite.credentialsCollection, context.TODO(), "user_id", db.UserId, &updated)
@@ -81,7 +77,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	suite.Assert().Equal(core.Blocked, updated.State)
 }
 
-func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsErrorWhenCredentialsWasBlocked() {
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentialsWhenCredentialsWasBlocked() {
 	db := CredentialsDB{}
 	err := faker.Build(&db)
 	manageTestError(err)
@@ -93,11 +89,9 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
-	suite.Assert().Error(err)
-	suite.Assert().Equal("Authentication error", err.Error())
-	suite.Assert().Equal("BasicError", reflect.TypeOf(err).Name())
-	suite.Assert().Equal(errors.AuthenticationError, err.(errors.BasicError).Code)
-	suite.Assert().Empty(result)
+	suite.Assert().NoError(err)
+	suite.Assert().NotEmpty(result)
+	suite.Assert().Equal(core.Blocked, result.State)
 
 	updated := CredentialsDB{}
 	findOne(suite.credentialsCollection, context.TODO(), "user_id", db.UserId, &updated)
@@ -111,10 +105,8 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	manageTestError(err)
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
-	suite.Assert().Equal("Authentication error\nCaused by mongo: no documents in result", err.Error())
-	suite.Assert().Equal("BasicError", reflect.TypeOf(err).Name())
-	suite.Assert().Equal(errors.AuthenticationError, err.(errors.BasicError).Code)
 
 	suite.Assert().Error(err)
+	suite.Assert().Equal("mongo: no documents in result", err.Error())
 	suite.Assert().Empty(result)
 }

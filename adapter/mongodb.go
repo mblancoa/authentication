@@ -3,7 +3,6 @@ package adapter
 import (
 	"context"
 	"github.com/mblancoa/authentication/core"
-	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 )
 
@@ -18,7 +17,7 @@ func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsReposi
 func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credentials, maxAttempts int) (core.Credentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), credentials.UserId)
 	if err != nil {
-		return core.Credentials{}, errors.NewErrorByCause(errors.AuthenticationError, "Authentication error", err)
+		return core.Credentials{}, err
 	}
 	if credentialsDB.Password != credentials.Password {
 		credentialsDB.Attempts++
@@ -29,8 +28,7 @@ func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credential
 		if err != nil {
 			return core.Credentials{}, err
 		}
-		return core.Credentials{}, errors.NewAuthenticationError("Authentication error")
-	} else if credentialsDB.Attempts != 0 {
+	} else if credentialsDB.State == core.Active && credentialsDB.Attempts != 0 {
 		credentialsDB.Attempts = 0
 		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
 		if err != nil {

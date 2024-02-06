@@ -56,7 +56,6 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	if state.State == Blocked {
 		return "", errors.NewAuthenticationError("User Blocked")
 	}

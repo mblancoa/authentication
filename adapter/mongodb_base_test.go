@@ -113,11 +113,13 @@ func findOne(coll *mongo.Collection, ctx context.Context, property string, value
 	}, options.FindOne().SetSort(bson.M{})).Decode(entity)
 	manageTestError(err)
 }
+
 func deleteAll(coll *mongo.Collection, ctx context.Context) {
 	log.Debug().Msgf("Deleting all documents in collection '%s'", coll.Name())
 	_, err := coll.DeleteMany(ctx, bson.D{})
 	manageTestError(err)
 }
+
 func manageTestError(err error) {
 	if err != nil {
 		log.Error().Msg(err.Error())
