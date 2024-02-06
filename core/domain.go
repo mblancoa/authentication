@@ -17,7 +17,7 @@ type CredentialState string
 
 const (
 	Active  CredentialState = "Active"
-	Blocked                 = "Blocked"
+	Blocked CredentialState = "Blocked"
 )
 
 type User struct {

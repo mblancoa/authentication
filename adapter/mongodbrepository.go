@@ -38,7 +38,7 @@ type MongoDbCredentialsRepository interface {
 	InsertOne(ctx context.Context, credentials *CredentialsDB) (interface{}, error)
 	FindById(ctx context.Context, id primitive.ObjectID) (*CredentialsDB, error)
 	FindByUserId(ctx context.Context, userId string) (*CredentialsDB, error)
-	UpdateByUserId(ctx context.Context, credentials *CredentialsDB, userId string) (bool, error)
+	UpdateById(ctx context.Context, credentials *CredentialsDB, id primitive.ObjectID) (bool, error)
 }
 
 //go:generate repogen -dest=mongodbuserrepository_impl.go -model=UserDB -repo=MongoDbUserRepository

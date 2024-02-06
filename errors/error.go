@@ -8,26 +8,26 @@ type ErrorCode string
 
 const (
 	Error               ErrorCode = "Error"
-	RuntimeError                  = "Runtime"
-	NotFoundError                 = "Not Found"
-	AuthenticationError           = "Authentication error"
+	RuntimeError        ErrorCode = "Runtime"
+	NotFoundError       ErrorCode = "Not Found"
+	AuthenticationError ErrorCode = "Authentication error"
 )
 
-type basicError struct {
+type BasicError struct {
 	Code    ErrorCode
 	Message string
 	Cause   string
 }
 
 func NewError(code ErrorCode, message string) error {
-	return basicError{
+	return BasicError{
 		Code:    code,
 		Message: message,
 	}
 }
 
 func NewErrorf(code ErrorCode, format string, a ...any) error {
-	return basicError{
+	return BasicError{
 		Code:    code,
 		Message: fmt.Sprintf(format, a...),
 	}
@@ -44,7 +44,7 @@ func NewErrorByCause(code ErrorCode, message string, cause error) error {
 	} else {
 		msg = cause.Error()
 	}
-	return basicError{
+	return BasicError{
 		Code:    code,
 		Message: msg,
 	}
@@ -82,6 +82,6 @@ func NewAuthenticationError(message string) error {
 	return NewErrorf(AuthenticationError, message)
 }
 
-func (error basicError) Error() string {
+func (error BasicError) Error() string {
 	return error.Message
 }

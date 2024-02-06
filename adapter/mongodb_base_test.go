@@ -103,10 +103,21 @@ func (suite *MongoDBPersistenceSuite) setupUserCollection() {
 func insertOne(coll *mongo.Collection, ctx context.Context, obj interface{}) {
 	log.Debug().Msgf("Inserting %v", obj)
 	_, err := coll.InsertOne(ctx, obj)
-	log.Debug().Msgf("%v inserted", obj)
 	manageTestError(err)
 }
 
+func findOne(coll *mongo.Collection, ctx context.Context, property string, value, entity interface{}) {
+	log.Debug().Msgf("Finding object from collection '%s'", coll.Name())
+	err := coll.FindOne(ctx, bson.M{
+		property: value,
+	}, options.FindOne().SetSort(bson.M{})).Decode(entity)
+	manageTestError(err)
+}
+func deleteAll(coll *mongo.Collection, ctx context.Context) {
+	log.Debug().Msgf("Deleting all documents in collection '%s'", coll.Name())
+	_, err := coll.DeleteMany(ctx, bson.D{})
+	manageTestError(err)
+}
 func manageTestError(err error) {
 	if err != nil {
 		log.Error().Msg(err.Error())
