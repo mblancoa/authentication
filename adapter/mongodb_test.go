@@ -33,7 +33,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsById(
 	gofakeit.Struct(&credentials.LastPasswords)
 	insertOne(suite.credentialsCollection, context.TODO(), credentials)
 
-	result, err := suite.credentialsRepository.FindById(context.TODO(), credentials.Id)
+	result, err := suite.credentialsRepository.FindByUserId(context.TODO(), credentials.UserId)
 
 	suite.Assert().NoError(err)
 	suite.Assert().NotEmpty(result)

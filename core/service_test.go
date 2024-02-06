@@ -39,13 +39,13 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	returnedCredentials.State = Active
 	var user User
 	gofakeit.Struct(&user)
-	user.ID = credentials.ID
+	user.UserId = credentials.UserId
 	user.Roles = []string{"admin", "customer"}
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
 	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userPersistenceService.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(encUser.UserId).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -53,7 +53,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	suite.Assert().NotEmpty(wToken)
 
 	token, _ := decodeJWT(wToken, SecretJwt)
-	suite.Assert().Equal(user.ID, token.Id)
+	suite.Assert().Equal(user.UserId, token.Id)
 	suite.Assert().Equal(user.Roles, token.Roles)
 
 }
@@ -68,8 +68,8 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	returnedCredentials.State = Active
 	var user User
 	gofakeit.Struct(&user)
-	id, _ := tools.Encrypt(credentials.ID, Secret)
-	user.ID = id
+	id, _ := tools.Encrypt(credentials.UserId, Secret)
+	user.UserId = id
 	expectedError := "Error decrypting field Email"
 
 	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
@@ -90,7 +90,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
-	id, _ := tools.Encrypt(credentials.ID, Secret)
+	id, _ := tools.Encrypt(credentials.UserId, Secret)
 	expectedError := errors.NewNotFoundError("User not found")
 
 	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)

@@ -14,8 +14,8 @@ func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsReposi
 	return &MongoDbCredentialsService{credentialsRepository: credentialsRepository}
 }
 
-func (m *MongoDbCredentialsService) ExistsCredentialsByIdAndPassword(credentials core.Credentials) (core.Credentials, bool) {
-	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), credentials.ID)
+func (m *MongoDbCredentialsService) ExistsCredentialsByUserIdAndPassword(credentials core.Credentials) (core.Credentials, bool) {
+	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), credentials.UserId)
 	if err != nil {
 		return core.Credentials{}, false
 	}
@@ -35,15 +35,15 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 		return core.Credentials{}, err
 	}
 
-	insertionDB, err := m.credentialsRepository.FindById(ctx, credentials.ID)
+	insertionDB, err := m.credentialsRepository.FindByUserId(ctx, credentials.UserId)
 	var result core.Credentials
 	tools.Mapper(insertionDB, &result)
 
 	return result, nil
 }
 
-func (m *MongoDbCredentialsService) FindCredentialsById(id string) (core.FullCredentials, error) {
-	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), id)
+func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
+	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), id)
 	if err != nil {
 		return core.FullCredentials{}, err
 	}
@@ -58,7 +58,7 @@ func (m *MongoDbCredentialsService) UpdateCredentials(credentials core.FullCrede
 	var credentialsDB CredentialsDB
 	tools.Mapper(credentials, &credentialsDB)
 
-	_, err := m.credentialsRepository.UpdateById(context.Background(), &credentialsDB, credentials.ID)
+	_, err := m.credentialsRepository.UpdateByUserId(context.Background(), &credentialsDB, credentials.UserId)
 	return err
 }
 
@@ -70,8 +70,8 @@ func NewMongoDbUserService(userRepository MongoDbUserRepository) core.UserPersis
 	return &MongoDbUserService{userRepository: userRepository}
 }
 
-func (m *MongoDbUserService) FindUserById(id string) (core.User, error) {
-	userDB, err := m.userRepository.FindById(context.Background(), id)
+func (m *MongoDbUserService) FindUserByUserId(id string) (core.User, error) {
+	userDB, err := m.userRepository.FindByUserId(context.Background(), id)
 	if err != nil {
 		return core.User{}, err
 	}

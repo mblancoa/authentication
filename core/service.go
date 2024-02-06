@@ -50,7 +50,7 @@ func NewAuthenticationService(notificationService tools.NotificationService, cre
 func (a *authenticationService) Login(credentials Credentials) (string, error) {
 	var hashedCredentials Credentials
 	tools.MarshalHash(credentials, &hashedCredentials)
-	state, ok := a.credentialsPersistenceService.ExistsCredentialsByIdAndPassword(hashedCredentials)
+	state, ok := a.credentialsPersistenceService.ExistsCredentialsByUserIdAndPassword(hashedCredentials)
 	if !ok {
 		return "", errors.NewAuthenticationError("Credentials not found")
 	}
@@ -58,12 +58,12 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 		return "", errors.NewAuthenticationError("User Blocked")
 	}
 
-	id, err := tools.Encrypt(credentials.ID, Secret)
+	userId, err := tools.Encrypt(credentials.UserId, Secret)
 	if err != nil {
 		return "", err
 	}
 
-	user, err := a.userPersistenceService.FindUserById(id)
+	user, err := a.userPersistenceService.FindUserByUserId(userId)
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +123,7 @@ func getJwt(claims CustomClaims, key string) (string, error) {
 func getJwtFromUser(user User, key string) (string, error) {
 	claims := CustomClaims{
 		jwt.StandardClaims{
-			Id:        user.ID,
+			Id:        user.UserId,
 			ExpiresAt: time.Now().Add(time.Minute * time.Duration(10)).Unix(),
 		},
 		user.Roles,

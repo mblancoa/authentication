@@ -11,6 +11,6 @@ code-generation:
 	go generate ./adapter/*
 
 test:
+	go clean -testcache
 	go test ./...
-
 

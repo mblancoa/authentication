@@ -30,11 +30,11 @@ Installation
 >`go install github.com/sunboyy/repogen@latest`
 
 Generation
->`go generate`
+>`make code-generation`
 
 ## Mocks generation
 Installation
 >`go install github.com/vektra/mockery/v2@v2.40.1`
 
 Generation
->`mockery`
+>`make clean mocks`
