@@ -3,9 +3,13 @@ package core
 // CredentialsPersistenceService defines operations related to the user credentials persistence
 type CredentialsPersistenceService interface {
 
-	// ExistsCredentialsByUserIdAndPassword confirms if exits any credentials like the argument in database
+	// CheckCredentials finds credentials by userId and checks its password.
+	// If credentials are not found an error is returned
+	// If password is incorrect attempts get increased and an error is returned. If attempts are equal to max
+	// credentials get blocked.
+	//
 	// credentials must be hashed
-	ExistsCredentialsByUserIdAndPassword(credentials Credentials) (Credentials, bool)
+	CheckCredentials(credentials Credentials, max int) (Credentials, error)
 
 	// InsertCredentials inserts a new user credentials record into database
 	// credentials must be hashed

@@ -44,7 +44,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByUserIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
 	suite.userPersistenceService.EXPECT().FindUserByUserId(encUser.UserId).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
@@ -72,7 +72,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	user.UserId = id
 	expectedError := "Error decrypting field Email"
 
-	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByUserIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
 	suite.userPersistenceService.EXPECT().FindUserByUserId(id).Return(user, nil)
 
 	u, err := suite.authenticationService.Login(credentials)
@@ -93,7 +93,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByUserIdRetur
 	id, _ := tools.Encrypt(credentials.UserId, Secret)
 	expectedError := errors.NewNotFoundError("User not found")
 
-	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByUserIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
 	suite.userPersistenceService.EXPECT().FindUserByUserId(id).Return(User{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
@@ -113,7 +113,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	returnedCredentials.State = Blocked
 	expectedError := errors.NewAuthenticationError("User Blocked")
 
-	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByUserIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -122,14 +122,14 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	suite.Assert().Empty(wToken)
 }
 
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsCredentialsByUserIdAndPassword() {
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenCheckCredentialsFails() {
 	var credentials Credentials
 	gofakeit.Struct(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	expectedError := errors.NewAuthenticationError("Credentials not found")
 
-	suite.credentialsPersistenceService.EXPECT().ExistsCredentialsByUserIdAndPassword(hashCredentials).Return(Credentials{}, false)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(Credentials{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 

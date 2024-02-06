@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	// TODO extract Secret to a config file
-	Secret    string = "a_*2$ñ6^fjz=?v^66€y7|~2ç"
-	SecretJwt string = "$68tk91we&hzDyDhJe[Zz[{&"
+	// TODO extract to a config file
+	Secret      string = "a_*2$ñ6^fjz=?v^66€y7|~2ç"
+	SecretJwt   string = "$68tk91we&hzDyDhJe[Zz[{&"
+	MaxAttempts int    = 3
 )
 
 // TODO review that, is it needed to be an interface?
@@ -50,10 +51,12 @@ func NewAuthenticationService(notificationService tools.NotificationService, cre
 func (a *authenticationService) Login(credentials Credentials) (string, error) {
 	var hashedCredentials Credentials
 	tools.MarshalHash(credentials, &hashedCredentials)
-	state, ok := a.credentialsPersistenceService.ExistsCredentialsByUserIdAndPassword(hashedCredentials)
-	if !ok {
-		return "", errors.NewAuthenticationError("Credentials not found")
+
+	state, err := a.credentialsPersistenceService.CheckCredentials(hashedCredentials, MaxAttempts)
+	if err != nil {
+		return "", err
 	}
+
 	if state.State == Blocked {
 		return "", errors.NewAuthenticationError("User Blocked")
 	}

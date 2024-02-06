@@ -14,3 +14,6 @@ test:
 	go clean -testcache
 	go test ./...
 
+all: clean code-generation mocks
+	go clean -testcache
+	go test ./...
