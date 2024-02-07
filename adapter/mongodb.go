@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 )
 
@@ -17,7 +18,7 @@ func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsReposi
 func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credentials, maxAttempts int) (core.Credentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), credentials.UserId)
 	if err != nil {
-		return core.Credentials{}, err
+		return core.Credentials{}, errors.NewNotFoundError(err.Error())
 	}
 	if credentialsDB.Password != credentials.Password {
 		credentialsDB.Attempts++
@@ -26,13 +27,13 @@ func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credential
 		}
 		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
 		if err != nil {
-			return core.Credentials{}, err
+			return core.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
 		}
 	} else if credentialsDB.State == core.Active && credentialsDB.Attempts != 0 {
 		credentialsDB.Attempts = 0
 		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
 		if err != nil {
-			return core.Credentials{}, err
+			return core.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials state", err)
 		}
 	}
 	var result core.Credentials
@@ -43,25 +44,21 @@ func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credential
 
 func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentials) (core.Credentials, error) {
 	ctx := context.Background()
-	var credentialsDB CredentialsDB
-	tools.Mapper(credentials, &credentialsDB)
+	credentialsDB := CredentialsDB{}
+	tools.Mapper(&credentials, &credentialsDB)
 
 	_, err := m.credentialsRepository.InsertOne(ctx, &credentialsDB)
 	if err != nil {
-		return core.Credentials{}, err
+		return core.Credentials{}, errors.NewGenericErrorByCause("Error inserting credentials", err)
 	}
 
-	insertionDB, err := m.credentialsRepository.FindByUserId(ctx, credentials.UserId)
-	var result core.Credentials
-	tools.Mapper(insertionDB, &result)
-
-	return result, nil
+	return credentials, nil
 }
 
 func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), id)
 	if err != nil {
-		return core.FullCredentials{}, err
+		return core.FullCredentials{}, errors.NewGenericError(err.Error())
 	}
 
 	var result core.FullCredentials

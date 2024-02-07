@@ -2,38 +2,39 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 )
 
-type ErrorCode string
+type Code string
 
 const (
-	Error               ErrorCode = "Error"
-	RuntimeError        ErrorCode = "Runtime"
-	NotFoundError       ErrorCode = "Not Found"
-	AuthenticationError ErrorCode = "Authentication error"
+	// Error is Default error
+	Error               Code = "Error"
+	NotFoundError       Code = "Not Found"
+	AuthenticationError Code = "Authentication error"
 )
 
-type BasicError struct {
-	Code    ErrorCode
+type basicError struct {
+	Code    Code
 	Message string
 	Cause   string
 }
 
-func NewError(code ErrorCode, message string) error {
-	return BasicError{
+func NewError(code Code, message string) error {
+	return basicError{
 		Code:    code,
 		Message: message,
 	}
 }
 
-func NewErrorf(code ErrorCode, format string, a ...any) error {
-	return BasicError{
+func NewErrorf(code Code, format string, a ...any) error {
+	return basicError{
 		Code:    code,
 		Message: fmt.Sprintf(format, a...),
 	}
 }
 
-func NewErrorByCause(code ErrorCode, message string, cause error) error {
+func NewErrorByCause(code Code, message string, cause error) error {
 	msg := ""
 	if message != "" {
 		if cause.Error() != "" {
@@ -44,7 +45,7 @@ func NewErrorByCause(code ErrorCode, message string, cause error) error {
 	} else {
 		msg = cause.Error()
 	}
-	return BasicError{
+	return basicError{
 		Code:    code,
 		Message: msg,
 	}
@@ -62,18 +63,6 @@ func NewGenericErrorByCause(message string, cause error) error {
 	return NewErrorByCause(Error, message, cause)
 }
 
-func NewRuntimeError(message string) error {
-	return NewError(RuntimeError, message)
-}
-
-func NewRuntimeErrorf(format string, a ...any) error {
-	return NewErrorf(RuntimeError, format, a...)
-}
-
-func NewRuntimeErrorByCause(message string, cause error) error {
-	return NewErrorByCause(RuntimeError, message, cause)
-}
-
 func NewNotFoundError(message string) error {
 	return NewError(NotFoundError, message)
 }
@@ -82,6 +71,13 @@ func NewAuthenticationError(message string) error {
 	return NewErrorf(AuthenticationError, message)
 }
 
-func (error BasicError) Error() string {
+func (error basicError) Error() string {
 	return error.Message
+}
+
+func GetCode(err error, def Code) Code {
+	if "basicError" == reflect.TypeOf(err).Name() {
+		return err.(basicError).Code
+	}
+	return def
 }

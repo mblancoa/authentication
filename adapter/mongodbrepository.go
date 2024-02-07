@@ -13,17 +13,17 @@ const (
 )
 
 type UserDB struct {
-	Id          primitive.ObjectID `bson:"_id"`
+	Id          primitive.ObjectID `bson:"_id,omitempty"`
 	UserId      string             `bson:"user_id"`
 	Email       string             `bson:"email"`
 	PhoneNumber string             `bson:"phone_number"`
 	Roles       []string           `bson:"roles,omitempty"`
-	Last        time.Time          `bson:"last"`
-	Version     int64              `bson:"version"`
+	Last        time.Time          `bson:"last,omitempty"`
+	Version     int64              `bson:"version,omitempty"`
 }
 
 type CredentialsDB struct {
-	Id            primitive.ObjectID   `bson:"_id"`
+	Id            primitive.ObjectID   `bson:"_id,omitempty"`
 	UserId        string               `bson:"user_id"`
 	Password      string               `bson:"password"`
 	State         core.CredentialState `bson:"state"`

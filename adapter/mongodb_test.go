@@ -2,7 +2,9 @@ package adapter
 
 import (
 	"context"
+	"github.com/devfeel/mapper"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
@@ -35,8 +37,7 @@ func TestCredentialsServiceSuite(t *testing.T) {
 
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_successful() {
 	db := CredentialsDB{}
-	err := faker.Build(&db)
-	tools.ManageTestError(err)
+	tools.FakerBuild(&db)
 	db.Attempts = 1
 	db.State = core.Active
 
@@ -58,8 +59,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_suc
 
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentiaslWhenCredentialsGetsBlocked() {
 	db := CredentialsDB{}
-	err := faker.Build(&db)
-	tools.ManageTestError(err)
+	tools.FakerBuild(&db)
 	db.Attempts = 2
 	db.State = core.Active
 
@@ -80,8 +80,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentialsWhenCredentialsWasBlocked() {
 	db := CredentialsDB{}
-	err := faker.Build(&db)
-	tools.ManageTestError(err)
+	tools.FakerBuild(&db)
 	db.Attempts = 1
 	db.State = core.Blocked
 
@@ -102,12 +101,37 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 
 func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsErrorWhenCredentialsNotFound() {
 	credentials := core.Credentials{}
-	err := faker.Build(&credentials)
-	tools.ManageTestError(err)
+	tools.FakerBuild(&credentials)
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
 	suite.Assert().Error(err)
 	suite.Assert().Equal("mongo: no documents in result", err.Error())
 	suite.Assert().Empty(result)
+}
+
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_successful() {
+	credentials := core.Credentials{}
+	tools.FakerBuild(&credentials)
+
+	result, err := suite.credentialsPersistenceService.InsertCredentials(credentials)
+
+	suite.Assert().NoError(err)
+	suite.Assert().NotEmpty(result)
+	suite.Assert().Equal(credentials, result)
+	suite.Assert().Equal(int64(1), count(suite.credentialsCollection, context.TODO()))
+}
+
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_returnsErrorWhenCredentialsWithSameUserIdExists() {
+	credentials := core.Credentials{}
+	tools.FakerBuild(&credentials)
+	db := CredentialsDB{}
+	_ = mapper.Mapper(&credentials, &db)
+	insertOne(suite.credentialsCollection, context.TODO(), &db)
+
+	result, err := suite.credentialsPersistenceService.InsertCredentials(credentials)
+
+	suite.Assert().Error(err)
+	suite.Assert().Empty(result)
+	suite.Assert().Equal(errors.Error, errors.GetCode(err, ""))
 }

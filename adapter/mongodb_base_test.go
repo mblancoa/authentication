@@ -120,3 +120,9 @@ func deleteAll(coll *mongo.Collection, ctx context.Context) {
 	_, err := coll.DeleteMany(ctx, bson.D{})
 	tools.ManageTestError(err)
 }
+
+func count(coll *mongo.Collection, ctx context.Context) int64 {
+	c, err := coll.CountDocuments(ctx, bson.D{})
+	tools.ManageTestError(err)
+	return c
+}
