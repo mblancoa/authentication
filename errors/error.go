@@ -2,38 +2,39 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 )
 
-type ErrorCode string
+type Code string
 
 const (
-	Error               ErrorCode = "Error"
-	RuntimeError                  = "Runtime"
-	NotFoundError                 = "Not Found"
-	AuthenticationError           = "Authentication error"
+	// Error is Default error
+	Error               Code = "Error"
+	NotFoundError       Code = "Not Found"
+	AuthenticationError Code = "Authentication error"
 )
 
 type basicError struct {
-	Code    ErrorCode
+	Code    Code
 	Message string
 	Cause   string
 }
 
-func NewError(code ErrorCode, message string) error {
+func NewError(code Code, message string) error {
 	return basicError{
 		Code:    code,
 		Message: message,
 	}
 }
 
-func NewErrorf(code ErrorCode, format string, a ...any) error {
+func NewErrorf(code Code, format string, a ...any) error {
 	return basicError{
 		Code:    code,
 		Message: fmt.Sprintf(format, a...),
 	}
 }
 
-func NewErrorByCause(code ErrorCode, message string, cause error) error {
+func NewErrorByCause(code Code, message string, cause error) error {
 	msg := ""
 	if message != "" {
 		if cause.Error() != "" {
@@ -62,18 +63,6 @@ func NewGenericErrorByCause(message string, cause error) error {
 	return NewErrorByCause(Error, message, cause)
 }
 
-func NewRuntimeError(message string) error {
-	return NewError(RuntimeError, message)
-}
-
-func NewRuntimeErrorf(format string, a ...any) error {
-	return NewErrorf(RuntimeError, format, a...)
-}
-
-func NewRuntimeErrorByCause(message string, cause error) error {
-	return NewErrorByCause(RuntimeError, message, cause)
-}
-
 func NewNotFoundError(message string) error {
 	return NewError(NotFoundError, message)
 }
@@ -84,4 +73,18 @@ func NewAuthenticationError(message string) error {
 
 func (error basicError) Error() string {
 	return error.Message
+}
+
+func GetCode(err error) Code {
+	if "basicError" == reflect.TypeOf(err).Name() {
+		return err.(basicError).Code
+	}
+	return ""
+}
+
+func GetCodeOrDefault(err error, def Code) Code {
+	if "basicError" == reflect.TypeOf(err).Name() {
+		return err.(basicError).Code
+	}
+	return def
 }

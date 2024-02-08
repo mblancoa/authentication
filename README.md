@@ -1,16 +1,40 @@
 # Authentication
-## Modules
+## Packages
+```
+Authentication
+|-- errors
+|   |-- error.go
+|
+|-- core
+|   |-- domain.go
+|   |-- service.go
+|   |-- port.go
+|
+|-- adapter
+|   |-- mongodb.go
+|   |-- mongodbrepository.go
+|
+|-- config
+|   |-- domain.go
+|   |-- core.go
+|   |-- mongodb.go
+|
+|-- main.go
+```
 - **core**: contains the application domain entities, the services and interfaces which implement and define the business logic.
-- **cache-redis**: cache implementation using redis
-- **repository-mongodb**: repository implementation to persist data into a mongodb database
-- **api-server**: application which runs in a server and provides the access through an API
-- **api-client**: library which provides the methods to connect with the API
+- **adapter**: implementation of interfaces in port.go
+
+## Repositories generation
+
+Installation 
+>`go install github.com/sunboyy/repogen@latest`
+
+Generation
+>`make code-generation`
 
 ## Mocks generation
 Installation
-
 >`go install github.com/vektra/mockery/v2@v2.40.1`
 
 Generation
-
->`mockery`
+>`make clean mocks`

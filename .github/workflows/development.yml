@@ -1,29 +1,27 @@
 name: Development
-on:
-  push:
-    types: [created,update]
+run-name: ${{ github.actor }} is running Development workflow
+on: [push]
 jobs:
-  build:
+  Push-action:
     runs-on: ubuntu-latest
-    outputs:
-      digests: ${{ steps.hash.outputs.digests }}
-
     steps:
-      - name: Setup Go environment
-        uses: actions/setup-go@v5.0.0
-        
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21.3'
       - name: Update dependencies
-        uses: actions/go-dependency-submission@v2.0.0
-        
-      - name: Setup Mockery
-        uses: github.com/vektra/mockery/v2@v2.40.1
-        
-      - name: Generate mocks
-        run: mockery
-
-      - name: Test execution
-        run: go test ./...
-
-      - name: Clean
-        run: make clean
- 
+        run: go mod download
+      - name: Code generation
+        run: |
+          go install github.com/sunboyy/repogen@latest
+          go generate ./adapter/*
+      - name: Mocks generation
+        run: |
+          go install github.com/vektra/mockery/v2@v2.40.1
+          mockery
+      - name: Tests execution
+        run: |
+          go clean -testcache
+          make test

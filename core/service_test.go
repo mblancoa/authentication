@@ -1,11 +1,10 @@
 package core
 
-// Basic imports
 import (
-	"github.com/brianvoe/gofakeit"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/mblancoa/authentication/core/errors"
-	"github.com/mblancoa/authentication/core/tools"
+	"github.com/mblancoa/authentication/errors"
+	"github.com/mblancoa/authentication/tools"
+	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
@@ -13,17 +12,17 @@ import (
 
 type AuthenticationServiceSuite struct {
 	suite.Suite
-	notificationService   *tools.MockNotificationService
-	credentialsRepository *MockUserCredentialsRepository
-	userRepository        *MockUserRepository
-	authenticationService AuthenticationService
+	notificationService           *tools.MockNotificationService
+	credentialsPersistenceService *MockCredentialsPersistenceService
+	userPersistenceService        *MockUserPersistenceService
+	authenticationService         AuthenticationService
 }
 
-func (suite *AuthenticationServiceSuite) SetupTest() {
+func (suite *AuthenticationServiceSuite) SetupSuite() {
 	suite.notificationService = tools.NewMockNotificationService(suite.T())
-	suite.credentialsRepository = NewMockUserCredentialsRepository(suite.T())
-	suite.userRepository = NewMockUserRepository(suite.T())
-	suite.authenticationService = NewAuthenticationService(suite.notificationService, suite.credentialsRepository, suite.userRepository)
+	suite.credentialsPersistenceService = NewMockCredentialsPersistenceService(suite.T())
+	suite.userPersistenceService = NewMockUserPersistenceService(suite.T())
+	suite.authenticationService = NewAuthenticationService(suite.notificationService, suite.credentialsPersistenceService, suite.userPersistenceService)
 }
 
 func TestAuthenticationServiceSuite(t *testing.T) {
@@ -31,21 +30,21 @@ func TestAuthenticationServiceSuite(t *testing.T) {
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_successful() {
-	var credentials UserCredentials
-	gofakeit.Struct(&credentials)
-	var hashCredentials UserCredentials
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 	returnedCredentials.State = Active
 	var user User
-	gofakeit.Struct(&user)
-	user.ID = credentials.ID
+	tools.FakerBuild(&user)
+	user.Id = credentials.Id
 	user.Roles = []string{"admin", "customer"}
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(encUser.ID).Return(encUser, nil)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(encUser.Id).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -53,27 +52,27 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	suite.Assert().NotEmpty(wToken)
 
 	token, _ := decodeJWT(wToken, SecretJwt)
-	suite.Assert().Equal(user.ID, token.Id)
+	suite.Assert().Equal(user.Id, token.Id)
 	suite.Assert().Equal(user.Roles, token.Roles)
 
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
-	var credentials UserCredentials
-	gofakeit.Struct(&credentials)
-	var hashCredentials UserCredentials
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
 	var user User
-	gofakeit.Struct(&user)
-	id, _ := tools.Encrypt(credentials.ID, Secret)
-	user.ID = id
+	tools.FakerBuild(&user)
+	id, _ := tools.Encrypt(credentials.Id, Secret)
+	user.Id = id
 	expectedError := "Error decrypting field Email"
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(id).Return(user, nil)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(user, nil)
 
 	u, err := suite.authenticationService.Login(credentials)
 
@@ -83,18 +82,18 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsError() {
-	var credentials UserCredentials
-	gofakeit.Struct(&credentials)
-	var hashCredentials UserCredentials
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Active
-	id, _ := tools.Encrypt(credentials.ID, Secret)
+	id, _ := tools.Encrypt(credentials.Id, Secret)
 	expectedError := errors.NewNotFoundError("User not found")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
-	suite.userRepository.EXPECT().FindUserById(id).Return(User{}, expectedError)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -104,16 +103,16 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
-	var credentials UserCredentials
-	gofakeit.Struct(&credentials)
-	var hashCredentials UserCredentials
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
 
 	returnedCredentials.State = Blocked
 	expectedError := errors.NewAuthenticationError("User Blocked")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(returnedCredentials, true)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -122,14 +121,14 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	suite.Assert().Empty(wToken)
 }
 
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredentialsByIdAndPassword() {
-	var credentials UserCredentials
-	gofakeit.Struct(&credentials)
-	var hashCredentials UserCredentials
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenCheckCredentialsFails() {
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	expectedError := errors.NewAuthenticationError("Credentials not found")
 
-	suite.credentialsRepository.EXPECT().ExistsUserCredentialsByIdAndPassword(hashCredentials).Return(UserCredentials{}, false)
+	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(Credentials{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -140,7 +139,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenNotExistsUserCredenti
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
 	var user User
-	gofakeit.Struct(&user)
+	tools.FakerBuild(&user)
 	j, _ := getJwtFromUser(user, SecretJwt)
 
 	result, err := suite.authenticationService.ValidateJWT(j)
@@ -151,7 +150,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT() {
 	var wToken string
-	gofakeit.Struct(&wToken)
+	tools.FakerBuild(&wToken)
 
 	result, err := suite.authenticationService.ValidateJWT(wToken)
 
@@ -161,7 +160,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT
 }
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired() {
-	id := gofakeit.Username()
+	id := faker.Username()
 
 	claims := CustomClaims{
 		jwt.StandardClaims{
@@ -180,7 +179,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired(
 }
 
 func (suite *AuthenticationServiceSuite) TestRefreshJWT_successful() {
-	id := gofakeit.Username()
+	id := faker.Username()
 
 	claims := CustomClaims{
 		jwt.StandardClaims{

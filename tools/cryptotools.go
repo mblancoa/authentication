@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/mblancoa/authentication/core/errors"
+	"github.com/mblancoa/authentication/errors"
 	"reflect"
 	"strings"
 )

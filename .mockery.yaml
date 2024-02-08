@@ -5,15 +5,9 @@ mockname: "Mock{{.InterfaceName}}"
 filename: "{{.MockName}}.go"
 dir: "{{.PackageName}}"
 inpackage: True
+all: True
 packages:
   github.com/mblancoa/authentication/core:
-    config:
-      dir: "./"
-    interfaces:
-      UserCredentialsRepository:
-      UserRepository:
-  github.com/mblancoa/authentication/core/tools:
-    interfaces:
-      NotificationService:
-
+  github.com/mblancoa/authentication/tools:
+#  github.com/mblancoa/authentication/adapter:
 # Lots more config...
