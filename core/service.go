@@ -54,7 +54,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 
 	state, err := a.credentialsPersistenceService.CheckCredentials(hashedCredentials, MaxAttempts)
 	if err != nil {
-		if errors.GetCode(err, "") == errors.NotFoundError {
+		if errors.GetCode(err) == errors.NotFoundError {
 			return "", errors.NewAuthenticationError(err.Error())
 		}
 		return "", err

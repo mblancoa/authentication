@@ -133,5 +133,48 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_re
 
 	suite.Assert().Error(err)
 	suite.Assert().Empty(result)
-	suite.Assert().Equal(errors.Error, errors.GetCode(err, ""))
+	suite.Assert().Equal(errors.Error, errors.GetCode(err))
+}
+
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUserId_successful() {
+	db := CredentialsDB{}
+	tools.FakerBuild(&db)
+	insertOne(suite.credentialsCollection, context.TODO(), &db)
+
+	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(db.Id)
+
+	suite.Assert().NoError(err)
+	suite.Assert().NotEmpty(result)
+	credentials := core.FullCredentials{}
+	tools.Mapper(&db, &credentials)
+	suite.Assert().Equal(credentials, result)
+}
+
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUserId_returnsErrorWhenNotFound() {
+	id := faker.UUID()
+	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(id)
+
+	suite.Assert().Error(err)
+	suite.Assert().Equal(errors.NotFoundError, errors.GetCode(err))
+	suite.Assert().Empty(result)
+}
+
+func (suite *MongoDBCredentialsPersistenceServiceSuite) TestUpdateCredentials_successful() {
+	db := CredentialsDB{}
+	tools.FakerBuild(&db)
+	id := db.Id
+	insertOne(suite.credentialsCollection, context.TODO(), &db)
+
+	credentials := core.FullCredentials{}
+	tools.FakerBuild(&credentials)
+	credentials.Id = id
+
+	err := suite.credentialsPersistenceService.UpdateCredentials(credentials)
+
+	suite.Assert().NoError(err)
+	updatedDb := CredentialsDB{}
+	findOne(suite.credentialsCollection, context.TODO(), "_id", id, &updatedDb)
+	updated := core.FullCredentials{}
+	tools.Mapper(updatedDb, &updated)
+	suite.Assert().Equal(credentials, updated)
 }

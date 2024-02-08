@@ -58,7 +58,7 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), id)
 	if err != nil {
-		return core.FullCredentials{}, errors.NewGenericError(err.Error())
+		return core.FullCredentials{}, errors.NewNotFoundError(err.Error())
 	}
 
 	var result core.FullCredentials
@@ -68,8 +68,10 @@ func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.Ful
 }
 
 func (m *MongoDbCredentialsService) UpdateCredentials(credentials core.FullCredentials) error {
-	//TODO
-	panic("Implement me")
+	db := CredentialsDB{}
+	tools.Mapper(&credentials, &db)
+	_, err := m.credentialsRepository.UpdateById(context.Background(), &db, credentials.Id)
+	return err
 }
 
 type MongoDbUserService struct {

@@ -75,7 +75,14 @@ func (error basicError) Error() string {
 	return error.Message
 }
 
-func GetCode(err error, def Code) Code {
+func GetCode(err error) Code {
+	if "basicError" == reflect.TypeOf(err).Name() {
+		return err.(basicError).Code
+	}
+	return ""
+}
+
+func GetCodeOrDefault(err error, def Code) Code {
 	if "basicError" == reflect.TypeOf(err).Name() {
 		return err.(basicError).Code
 	}
