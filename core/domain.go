@@ -33,7 +33,9 @@ type Credentials struct {
 }
 
 type FullCredentials struct {
-	Credentials
+	Id            string `hash:"true"`
+	Password      string `hash:"true"`
+	State         CredentialState
 	LastPasswords []string
 }
 
@@ -61,4 +63,7 @@ func (u User) String() string {
 }
 func (u Credentials) String() string {
 	return fmt.Sprintf("Credentials: {\n\tID: %s,\n\tPassword: %s,\n\tState: %s,\n}", u.Id, u.Password, u.State)
+}
+func (u FullCredentials) String() string {
+	return fmt.Sprintf("FullCredentials: {\n\tID: %s,\n\tPassword: %s,\n\tState: %s,\n\tLastPasswords: %v\n}", u.Id, u.Password, u.State, u.LastPasswords)
 }

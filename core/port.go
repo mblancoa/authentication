@@ -27,7 +27,7 @@ type CredentialsPersistenceService interface {
 type UserPersistenceService interface {
 	// FindUserByUserId returns the user found in db. If not found, user will be empty and error not nil
 	// id must be encrypted and the returned user will be encrypted
-	FindUserByUserId(id string) (User, error)
+	FindUserById(id string) (User, error)
 
 	// FindUserByEmail returns the user found in db. If not found, user will be empty and error not nil
 	// email must be encrypted and the returned user will be encrypted
@@ -41,5 +41,5 @@ type UserPersistenceService interface {
 	InsertUser(user User) (User, error)
 
 	// UpdateUser modifies the user with the new data
-	UpdateUser(user User) (User, error)
+	UpdateUser(user User) error
 }

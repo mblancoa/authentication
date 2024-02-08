@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type MongoDBPersistenceSuite struct {
+type mongoDBPersistenceSuite struct {
 	suite.Suite
 	server                *mim.Server
 	client                *mongo.Client
@@ -22,7 +22,7 @@ type MongoDBPersistenceSuite struct {
 	userRepository        MongoDbUserRepository
 }
 
-func (suite *MongoDBPersistenceSuite) SetupSuite() {
+func (suite *mongoDBPersistenceSuite) SetupSuite() {
 	testCtx := context.Background()
 
 	server, err := mim.Start(testCtx, "5.0.2")
@@ -36,16 +36,17 @@ func (suite *MongoDBPersistenceSuite) SetupSuite() {
 	tools.ManageTestError(err)
 	suite.client = client
 	suite.database = client.Database("auth")
+	suite.Assert()
 }
 
-func (suite *MongoDBPersistenceSuite) TearDownSuite() {
+func (suite *mongoDBPersistenceSuite) TearDownSuite() {
 	ctx := context.TODO()
 	defer suite.server.Stop(ctx)
 	err := suite.client.Disconnect(ctx)
 	tools.ManageTestError(err)
 }
 
-func (suite *MongoDBPersistenceSuite) setupCredentialsCollection() {
+func (suite *mongoDBPersistenceSuite) setupCredentialsCollection() {
 	db := suite.database
 	log.Debug().Msgf("Creating collection '%s'", CredentialsCollection)
 	err := db.CreateCollection(context.TODO(), CredentialsCollection)
@@ -66,7 +67,7 @@ func (suite *MongoDBPersistenceSuite) setupCredentialsCollection() {
 	suite.credentialsRepository = NewMongoDbCredentialsRepository(suite.credentialsCollection)
 }
 
-func (suite *MongoDBPersistenceSuite) setupUserCollection() {
+func (suite *mongoDBPersistenceSuite) setupUserCollection() {
 	db := suite.database
 	log.Debug().Msgf("Creating collection '%s'", UserCollection)
 	err := db.CreateCollection(context.TODO(), UserCollection)

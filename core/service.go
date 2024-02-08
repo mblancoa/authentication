@@ -68,7 +68,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 		return "", err
 	}
 
-	user, err := a.userPersistenceService.FindUserByUserId(userId)
+	user, err := a.userPersistenceService.FindUserById(userId)
 	if err != nil {
 		return "", err
 	}

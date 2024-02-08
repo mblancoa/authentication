@@ -12,16 +12,16 @@ const (
 )
 
 type UserDB struct {
-	Id          string    `bson:"_id"`
+	Id          string    `bson:"_id,omitempty"`
 	Email       string    `bson:"email"`
 	PhoneNumber string    `bson:"phone_number"`
-	Roles       []string  `bson:"roles,omitempty"`
+	Roles       []string  `bson:"roles"`
 	Last        time.Time `bson:"last,omitempty"`
 	Version     int64     `bson:"version,omitempty"`
 }
 
 type CredentialsDB struct {
-	Id            string               `bson:"_id"`
+	Id            string               `bson:"_id,omitempty"`
 	Password      string               `bson:"password"`
 	State         core.CredentialState `bson:"state"`
 	LastPasswords []string             `bson:"last_passwords,omitempty"`

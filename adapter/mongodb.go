@@ -52,7 +52,9 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 		return core.Credentials{}, errors.NewGenericErrorByCause("Error inserting credentials", err)
 	}
 
-	return credentials, nil
+	result := core.Credentials{}
+	tools.Mapper(&credentialsDB, &result)
+	return result, nil
 }
 
 func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
@@ -70,7 +72,10 @@ func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.Ful
 func (m *MongoDbCredentialsService) UpdateCredentials(credentials core.FullCredentials) error {
 	db := CredentialsDB{}
 	tools.Mapper(&credentials, &db)
+	db.Id = ""
+
 	_, err := m.credentialsRepository.UpdateById(context.Background(), &db, credentials.Id)
+
 	return err
 }
 
@@ -82,10 +87,10 @@ func NewMongoDbUserService(userRepository MongoDbUserRepository) core.UserPersis
 	return &MongoDbUserService{userRepository: userRepository}
 }
 
-func (m *MongoDbUserService) FindUserByUserId(id string) (core.User, error) {
+func (m *MongoDbUserService) FindUserById(id string) (core.User, error) {
 	userDB, err := m.userRepository.FindById(context.Background(), id)
 	if err != nil {
-		return core.User{}, err
+		return core.User{}, errors.NewNotFoundError(err.Error())
 	}
 
 	var result core.User
@@ -97,7 +102,7 @@ func (m *MongoDbUserService) FindUserByUserId(id string) (core.User, error) {
 func (m *MongoDbUserService) FindUserByEmail(email string) (core.User, error) {
 	userDB, err := m.userRepository.FindByEmail(context.Background(), email)
 	if err != nil {
-		return core.User{}, err
+		return core.User{}, errors.NewNotFoundError(err.Error())
 	}
 
 	var result core.User
@@ -109,7 +114,7 @@ func (m *MongoDbUserService) FindUserByEmail(email string) (core.User, error) {
 func (m *MongoDbUserService) FindUserByPhoneNumber(phoneNumber string) (core.User, error) {
 	userDB, err := m.userRepository.FindByPhoneNumber(context.Background(), phoneNumber)
 	if err != nil {
-		return core.User{}, err
+		return core.User{}, errors.NewNotFoundError(err.Error())
 	}
 
 	var result core.User
@@ -119,11 +124,23 @@ func (m *MongoDbUserService) FindUserByPhoneNumber(phoneNumber string) (core.Use
 }
 
 func (m *MongoDbUserService) InsertUser(user core.User) (core.User, error) {
-	//TODO
-	panic("implement me")
+	db := UserDB{}
+	tools.Mapper(&user, &db)
+	_, err := m.userRepository.InsertOne(context.Background(), &db)
+	if err != nil {
+		return core.User{}, errors.NewGenericErrorByCause("Error inserting credentials", err)
+	}
+
+	result := core.User{}
+	tools.Mapper(&db, &result)
+	return result, nil
 }
 
-func (m *MongoDbUserService) UpdateUser(user core.User) (core.User, error) {
-	//TODO
-	panic("implement me")
+func (m *MongoDbUserService) UpdateUser(user core.User) error {
+	db := UserDB{}
+	tools.Mapper(&user, &db)
+	db.Id = ""
+	_, err := m.userRepository.UpdateById(context.Background(), &db, user.Id)
+
+	return err
 }
