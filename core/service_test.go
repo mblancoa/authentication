@@ -44,7 +44,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
 	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
-	suite.userPersistenceService.EXPECT().FindUserByUserId(encUser.Id).Return(encUser, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(encUser.Id).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -72,7 +72,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	expectedError := "Error decrypting field Email"
 
 	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
-	suite.userPersistenceService.EXPECT().FindUserByUserId(id).Return(user, nil)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(user, nil)
 
 	u, err := suite.authenticationService.Login(credentials)
 
@@ -81,7 +81,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	suite.Assert().Empty(u)
 }
 
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByUserIdReturnsError() {
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsError() {
 	var credentials Credentials
 	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
@@ -93,7 +93,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByUserIdRetur
 	expectedError := errors.NewNotFoundError("User not found")
 
 	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
-	suite.userPersistenceService.EXPECT().FindUserByUserId(id).Return(User{}, expectedError)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, expectedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
