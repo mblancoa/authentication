@@ -63,7 +63,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 		return "", errors.NewAuthenticationError("User Blocked")
 	}
 
-	userId, err := tools.Encrypt(credentials.UserId, Secret)
+	userId, err := tools.Encrypt(credentials.Id, Secret)
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +128,7 @@ func getJwt(claims CustomClaims, key string) (string, error) {
 func getJwtFromUser(user User, key string) (string, error) {
 	claims := CustomClaims{
 		jwt.StandardClaims{
-			Id:        user.UserId,
+			Id:        user.Id,
 			ExpiresAt: time.Now().Add(time.Minute * time.Duration(10)).Unix(),
 		},
 		user.Roles,

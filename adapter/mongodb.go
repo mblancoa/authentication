@@ -16,7 +16,7 @@ func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsReposi
 }
 
 func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credentials, maxAttempts int) (core.Credentials, error) {
-	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), credentials.UserId)
+	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), credentials.Id)
 	if err != nil {
 		return core.Credentials{}, errors.NewNotFoundError(err.Error())
 	}
@@ -56,7 +56,7 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 }
 
 func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
-	credentialsDB, err := m.credentialsRepository.FindByUserId(context.Background(), id)
+	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), id)
 	if err != nil {
 		return core.FullCredentials{}, errors.NewGenericError(err.Error())
 	}
@@ -81,7 +81,7 @@ func NewMongoDbUserService(userRepository MongoDbUserRepository) core.UserPersis
 }
 
 func (m *MongoDbUserService) FindUserByUserId(id string) (core.User, error) {
-	userDB, err := m.userRepository.FindByUserId(context.Background(), id)
+	userDB, err := m.userRepository.FindById(context.Background(), id)
 	if err != nil {
 		return core.User{}, err
 	}

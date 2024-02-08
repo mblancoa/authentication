@@ -55,8 +55,8 @@ func (suite *MongoDBPersistenceSuite) setupCredentialsCollection() {
 
 	idIdx := mongo.IndexModel{
 		Keys: bson.M{
-			"id": 1, // index in ascending order
-		}, Options: &options.IndexOptions{Unique: tools.BoolPointer(true)},
+			"_id": 1, // index in ascending order
+		},
 	}
 	s, err := collection.Indexes().CreateOne(context.TODO(), idIdx)
 	tools.ManageTestError(err)
@@ -77,8 +77,8 @@ func (suite *MongoDBPersistenceSuite) setupUserCollection() {
 	idIdx := []mongo.IndexModel{
 		{
 			Keys: bson.M{
-				"id": 1, // index in ascending order
-			}, Options: &options.IndexOptions{Unique: tools.BoolPointer(true)},
+				"_id": 1, // index in ascending order
+			},
 		},
 		{
 			Keys: bson.M{

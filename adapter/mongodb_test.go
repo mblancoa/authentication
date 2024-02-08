@@ -42,18 +42,18 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_suc
 	db.State = core.Active
 
 	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{UserId: db.UserId, Password: db.Password}
+	credentials := core.Credentials{Id: db.Id, Password: db.Password}
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
 	suite.Assert().NoError(err)
 	suite.Assert().NotEmpty(result)
-	suite.Assert().Equal(db.UserId, result.UserId)
+	suite.Assert().Equal(db.Id, result.Id)
 	suite.Assert().Equal(db.Password, result.Password)
 	suite.Assert().Equal(core.Active, result.State)
 
 	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "user_id", db.UserId, &updated)
+	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
 	suite.Assert().Equal(0, updated.Attempts)
 }
 
@@ -64,7 +64,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	db.State = core.Active
 
 	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{UserId: db.UserId, Password: faker.String()}
+	credentials := core.Credentials{Id: db.Id, Password: faker.String()}
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
@@ -73,7 +73,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	suite.Assert().Equal(core.Blocked, result.State)
 
 	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "user_id", db.UserId, &updated)
+	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
 	suite.Assert().Equal(3, updated.Attempts)
 	suite.Assert().Equal(core.Blocked, updated.State)
 }
@@ -85,7 +85,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	db.State = core.Blocked
 
 	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{UserId: db.UserId, Password: faker.String()}
+	credentials := core.Credentials{Id: db.Id, Password: faker.String()}
 
 	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
 
@@ -94,7 +94,7 @@ func (suite *MongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_ret
 	suite.Assert().Equal(core.Blocked, result.State)
 
 	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "user_id", db.UserId, &updated)
+	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
 	suite.Assert().Equal(2, updated.Attempts)
 	suite.Assert().Equal(core.Blocked, updated.State)
 }
