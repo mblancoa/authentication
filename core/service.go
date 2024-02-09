@@ -40,7 +40,7 @@ type authenticationService struct {
 func NewAuthenticationService(notificationService tools.NotificationService, credentialsPersistenceService CredentialsPersistenceService,
 	userPersistenceService UserPersistenceService) AuthenticationService {
 	service := authenticationService{
-		notificationsTemplates:        template.Must(template.ParseGlob("../templates/*.txt")),
+		notificationsTemplates:        template.Must(template.ParseGlob("./templates/*.txt")),
 		notificationService:           notificationService,
 		credentialsPersistenceService: credentialsPersistenceService,
 		userPersistenceService:        userPersistenceService,

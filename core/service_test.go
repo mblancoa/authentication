@@ -6,6 +6,7 @@ import (
 	"github.com/mblancoa/authentication/tools"
 	"github.com/pioz/faker"
 	"github.com/stretchr/testify/suite"
+	"os"
 	"testing"
 	"time"
 )
@@ -19,6 +20,7 @@ type AuthenticationServiceSuite struct {
 }
 
 func (suite *AuthenticationServiceSuite) SetupSuite() {
+	_ = os.Chdir("./..")
 	suite.notificationService = tools.NewMockNotificationService(suite.T())
 	suite.credentialsPersistenceService = NewMockCredentialsPersistenceService(suite.T())
 	suite.userPersistenceService = NewMockUserPersistenceService(suite.T())

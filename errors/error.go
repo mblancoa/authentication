@@ -88,3 +88,9 @@ func GetCodeOrDefault(err error, def Code) Code {
 	}
 	return def
 }
+
+func ManageErrorPanic(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
