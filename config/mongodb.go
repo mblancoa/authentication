@@ -14,24 +14,9 @@ import (
 var mongoDbCredentialsRepository adapter.MongoDbCredentialsRepository
 var mongoDbUserRepository adapter.MongoDbUserRepository
 
-type MongoDbConfiguration struct {
-	Database DB `json:"database"`
-}
-type DB struct {
-	Name       string     `json:"name"`
-	Connection Connection `json:"connection"`
-}
-type Connection struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 // SetupMongoDBConfiguration sets mongodb configuration
 func SetupMongoDBConfiguration() {
-	var config MongoDbConfiguration
-	loadConfiguration(&config, "config/mongodb.json")
+	config := GetAppConfiguration().MongoDB
 	conn := config.Database.Connection
 	connectionString := fmt.Sprintf("%s:%s//%s:%d", conn.Username, os.Getenv(conn.Password), conn.Host, conn.Port)
 

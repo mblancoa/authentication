@@ -12,6 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/thanhpk/randstr v1.0.6
 	go.mongodb.org/mongo-driver v1.13.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
