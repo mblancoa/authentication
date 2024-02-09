@@ -1,6 +1,7 @@
 name: Development
 run-name: ${{ github.actor }} is running Development workflow
-on: [push]
+on:
+  push:
 jobs:
   Push-action:
     runs-on: ubuntu-latest
