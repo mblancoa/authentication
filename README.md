@@ -1,3 +1,6 @@
+|       |-- auth.go
+|       |-- auth.go
+|       |-- auth.go
 # Authentication
 ## Packages
 ```
@@ -16,7 +19,9 @@ Authentication
 |
 |-- api
 |   |-- controllers
+|       |-- base.go
 |       |-- auth.go
+|       |-- domain.go
 |   |-- router.go
 |
 |-- config
