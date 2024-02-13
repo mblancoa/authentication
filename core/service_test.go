@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
@@ -91,15 +92,16 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 
 	returnedCredentials.State = Active
 	id, _ := tools.Encrypt(credentials.Id, Secret)
-	expectedError := errors.NewNotFoundError("User not found")
+	thrown := errors.NewNotFoundError("User not found")
+	expected := errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", id), thrown)
 
 	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
-	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, expectedError)
+	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, thrown)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
-	suite.Assert().Equal(expectedError, err)
+	suite.Assert().Equal(expected, err)
 	suite.Assert().Empty(wToken)
 }
 

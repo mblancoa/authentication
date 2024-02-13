@@ -17,7 +17,7 @@ type CredentialsPersistenceService interface {
 
 	// FindCredentialsByUserId Returns the userFullCredentials found in db. If not found, userFullCredentials will be empty and error not nil
 	// id must be hashed and the returned userFullCredentials will be hashed
-	FindCredentialsByUserId(id string) (FullCredentials, error)
+	FindCredentialsByIdId(id string) (FullCredentials, error)
 
 	// UpdateCredentials modifies the userFullCredentials with the new data
 	UpdateCredentials(credentials FullCredentials) error

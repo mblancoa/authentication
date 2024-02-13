@@ -58,7 +58,7 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 	return result, nil
 }
 
-func (m *MongoDbCredentialsService) FindCredentialsByUserId(id string) (core.FullCredentials, error) {
+func (m *MongoDbCredentialsService) FindCredentialsByIdId(id string) (core.FullCredentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), id)
 	if err != nil {
 		return core.FullCredentials{}, errors.NewNotFoundError(err.Error())

@@ -143,7 +143,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUse
 	tools.FakerBuild(&db)
 	insertOne(suite.credentialsCollection, context.TODO(), &db)
 
-	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(db.Id)
+	result, err := suite.credentialsPersistenceService.FindCredentialsByIdId(db.Id)
 
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(result)
@@ -154,7 +154,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUse
 
 func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUserId_returnsErrorWhenNotFound() {
 	id := faker.UUID()
-	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(id)
+	result, err := suite.credentialsPersistenceService.FindCredentialsByIdId(id)
 
 	suite.Assertions.Error(err)
 	suite.Assertions.Equal(errors.NotFoundError, errors.GetCode(err))
