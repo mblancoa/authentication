@@ -56,7 +56,6 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	token, _ := decodeJWT(wToken, SecretJwt)
 	suite.Assert().Equal(user.Id, token.Id)
 	suite.Assert().Equal(user.Roles, token.Roles)
-
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {

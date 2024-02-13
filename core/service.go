@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
@@ -70,7 +71,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 
 	user, err := a.userPersistenceService.FindUserById(userId)
 	if err != nil {
-		return "", err
+		return "", errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", userId), err)
 	}
 
 	var decUser User

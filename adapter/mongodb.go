@@ -29,6 +29,7 @@ func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credential
 		if err != nil {
 			return core.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
 		}
+		return core.Credentials{}, errors.NewNotFoundError("credentials not found")
 	} else if credentialsDB.State == core.Active && credentialsDB.Attempts != 0 {
 		credentialsDB.Attempts = 0
 		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
