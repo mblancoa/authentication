@@ -1,0 +1,9 @@
+# MongoDB configuration
+mongodb:
+  database:
+    name: auth
+    connection:
+      host: localhost
+      port: 27017
+      username: mongodb
+      password: "DB_PASSWORD"

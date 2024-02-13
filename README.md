@@ -1,3 +1,6 @@
+|       |-- auth.go
+|       |-- auth.go
+|       |-- auth.go
 # Authentication
 ## Packages
 ```
@@ -14,6 +17,13 @@ Authentication
 |   |-- mongodb.go
 |   |-- mongodbrepository.go
 |
+|-- api
+|   |-- controllers
+|       |-- base.go
+|       |-- auth.go
+|       |-- domain.go
+|   |-- router.go
+|
 |-- config
 |   |-- domain.go
 |   |-- core.go
@@ -23,6 +33,7 @@ Authentication
 ```
 - **core**: contains the application domain entities, the services and interfaces which implement and define the business logic.
 - **adapter**: implementation of interfaces in port.go
+- **api**: API implementation
 
 ## Repositories generation
 

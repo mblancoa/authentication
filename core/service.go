@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
@@ -40,7 +41,7 @@ type authenticationService struct {
 func NewAuthenticationService(notificationService tools.NotificationService, credentialsPersistenceService CredentialsPersistenceService,
 	userPersistenceService UserPersistenceService) AuthenticationService {
 	service := authenticationService{
-		notificationsTemplates:        template.Must(template.ParseGlob("../templates/*.txt")),
+		notificationsTemplates:        template.Must(template.ParseGlob("./templates/*.txt")),
 		notificationService:           notificationService,
 		credentialsPersistenceService: credentialsPersistenceService,
 		userPersistenceService:        userPersistenceService,
@@ -55,7 +56,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 	state, err := a.credentialsPersistenceService.CheckCredentials(hashedCredentials, MaxAttempts)
 	if err != nil {
 		if errors.GetCode(err) == errors.NotFoundError {
-			return "", errors.NewAuthenticationError(err.Error())
+			return "", errors.NewAuthenticationError("Credentials not found")
 		}
 		return "", err
 	}
@@ -70,7 +71,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 
 	user, err := a.userPersistenceService.FindUserById(userId)
 	if err != nil {
-		return "", err
+		return "", errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", userId), err)
 	}
 
 	var decUser User

@@ -15,9 +15,9 @@ const (
 )
 
 type basicError struct {
-	Code    Code
-	Message string
-	Cause   string
+	Code    Code   `json:"code"`
+	Message string `json:"Message"`
+	Cause   string `json:"-"`
 }
 
 func NewError(code Code, message string) error {
@@ -71,6 +71,10 @@ func NewAuthenticationError(message string) error {
 	return NewErrorf(AuthenticationError, message)
 }
 
+func NewAuthenticationErrorByCause(message string, cause error) error {
+	return NewErrorByCause(AuthenticationError, message, cause)
+}
+
 func (error basicError) Error() string {
 	return error.Message
 }
@@ -87,4 +91,10 @@ func GetCodeOrDefault(err error, def Code) Code {
 		return err.(basicError).Code
 	}
 	return def
+}
+
+func ManageErrorPanic(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
