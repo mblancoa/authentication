@@ -15,34 +15,6 @@ func NewMongoDbCredentialsService(credentialsRepository MongoDbCredentialsReposi
 	return &MongoDbCredentialsService{credentialsRepository: credentialsRepository}
 }
 
-func (m *MongoDbCredentialsService) CheckCredentials(credentials core.Credentials, maxAttempts int) (core.Credentials, error) {
-	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), credentials.Id)
-	if err != nil {
-		return core.Credentials{}, errors.NewNotFoundError(err.Error())
-	}
-	if credentialsDB.Password != credentials.Password {
-		credentialsDB.Attempts++
-		if credentialsDB.Attempts == 3 {
-			credentialsDB.State = core.Blocked
-		}
-		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
-		if err != nil {
-			return core.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
-		}
-		return core.Credentials{}, errors.NewNotFoundError("credentials not found")
-	} else if credentialsDB.State == core.Active && credentialsDB.Attempts != 0 {
-		credentialsDB.Attempts = 0
-		_, err = m.credentialsRepository.UpdateById(context.Background(), credentialsDB, credentialsDB.Id)
-		if err != nil {
-			return core.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials state", err)
-		}
-	}
-	var result core.Credentials
-	tools.Mapper(credentialsDB, &result)
-
-	return result, nil
-}
-
 func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentials) (core.Credentials, error) {
 	ctx := context.Background()
 	credentialsDB := CredentialsDB{}
@@ -58,7 +30,7 @@ func (m *MongoDbCredentialsService) InsertCredentials(credentials core.Credentia
 	return result, nil
 }
 
-func (m *MongoDbCredentialsService) FindCredentialsByIdId(id string) (core.FullCredentials, error) {
+func (m *MongoDbCredentialsService) FindCredentialsById(id string) (core.FullCredentials, error) {
 	credentialsDB, err := m.credentialsRepository.FindById(context.Background(), id)
 	if err != nil {
 		return core.FullCredentials{}, errors.NewNotFoundError(err.Error())

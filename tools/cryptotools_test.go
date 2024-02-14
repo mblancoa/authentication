@@ -35,7 +35,7 @@ func TestBase64Decode(t *testing.T) {
 		Error   bool
 		Message string
 	}{
-		{"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNfassds", true, "Error base64 decoding\nCaused by illegal base64 data at input byte 44"},
+		{"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNfassds", true, "Error base64 decoding\n\tCaused by illegal base64 data at input byte 44"},
 		{"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdA==", false, ""},
 	}
 	for i, uCase := range useCases {
@@ -74,7 +74,7 @@ func TestDecrypt_ko_errorB64(t *testing.T) {
 	//Decrypting incorrect word
 	word := string(randstr.Bytes(16))
 	encWord, _ := Encrypt(word, secret)
-	expectedErr := "Error base64 decoding\nCaused by illegal base64 data at input byte 45"
+	expectedErr := "Error base64 decoding\n\tCaused by illegal base64 data at input byte 45"
 	result, err := Decrypt(encWord[14:], secret)
 
 	assert.Error(t, err)

@@ -20,3 +20,14 @@ func FakerBuild(v interface{}) {
 func BoolPointer(b bool) *bool {
 	return &b
 }
+
+type testError struct {
+	msg string
+}
+
+func NewTestError(msg string) error {
+	return testError{msg: msg}
+}
+func (e testError) Error() string {
+	return e.msg
+}

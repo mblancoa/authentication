@@ -53,7 +53,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 	var hashedCredentials Credentials
 	tools.MarshalHash(credentials, &hashedCredentials)
 
-	state, err := a.credentialsPersistenceService.CheckCredentials(hashedCredentials, MaxAttempts)
+	state, err := a.checkCredentials(hashedCredentials, MaxAttempts)
 	if err != nil {
 		if errors.GetCode(err) == errors.NotFoundError {
 			return "", errors.NewAuthenticationError("Credentials not found")
@@ -119,6 +119,40 @@ func (a *authenticationService) StartSingUP(user User) error {
 func (a *authenticationService) SingUP(confirmation ConfirmationCredentials) error {
 	//TODO implement me
 	panic("implement me")
+}
+
+// checkCredentials finds credentials by userId and checks its password.
+// If credentials are not found an error is returned
+// If password is incorrect attempts get increased and an error is returned. If attempts are equal to max
+// credentials get blocked.
+//
+// credentials must be hashed
+func (a *authenticationService) checkCredentials(credentials Credentials, maxAttempts int) (Credentials, error) {
+	savedCredentials, err := a.credentialsPersistenceService.FindCredentialsById(credentials.Id)
+	if err != nil {
+		return Credentials{}, errors.NewNotFoundError(err.Error())
+	}
+	if savedCredentials.Password != credentials.Password {
+		savedCredentials.Attempts++
+		if savedCredentials.Attempts == 3 {
+			savedCredentials.State = Blocked
+		}
+		err = a.credentialsPersistenceService.UpdateCredentials(savedCredentials)
+		if err != nil {
+			return Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
+		}
+		return Credentials{}, errors.NewNotFoundError("credentials not found")
+	} else if savedCredentials.State == Active && savedCredentials.Attempts != 0 {
+		savedCredentials.Attempts = 0
+		err = a.credentialsPersistenceService.UpdateCredentials(savedCredentials)
+		if err != nil {
+			return Credentials{}, errors.NewGenericErrorByCause("Error updating credentials state", err)
+		}
+	}
+	var result Credentials
+	tools.Mapper(&savedCredentials, &result)
+
+	return result, nil
 }
 
 func getJwt(claims CustomClaims, key string) (string, error) {

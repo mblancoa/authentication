@@ -37,8 +37,10 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
+
 	returnedCredentials := hashCredentials
 	returnedCredentials.State = Active
+
 	var user User
 	tools.FakerBuild(&user)
 	user.Id = credentials.Id
@@ -46,7 +48,15 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 	var encUser User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	savedCdt := NewFullCredentials(hashCredentials)
+	savedCdt.State = Active
+	savedCdt.Attempts = 1
+
+	cdtToSave := savedCdt
+	cdtToSave.Attempts = 0
+
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashCredentials.Id).Return(savedCdt, nil)
+	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(cdtToSave).Return(nil)
 	suite.userPersistenceService.EXPECT().FindUserById(encUser.Id).Return(encUser, nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
@@ -64,58 +74,77 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
-	returnedCredentials := hashCredentials
 
-	returnedCredentials.State = Active
+	savedCdt := NewFullCredentials(hashCredentials)
+	savedCdt.State = Active
+	savedCdt.Attempts = 0
+
 	var user User
 	tools.FakerBuild(&user)
 	id, _ := tools.Encrypt(credentials.Id, Secret)
 	user.Id = id
-	expectedError := "Error decrypting field Email"
 
-	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashCredentials.Id).Return(savedCdt, nil)
 	suite.userPersistenceService.EXPECT().FindUserById(id).Return(user, nil)
 
 	u, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
-	suite.Assert().Equal(expectedError, err.Error())
+	suite.Assert().Equal("Error decrypting field Email", err.Error())
 	suite.Assert().Empty(u)
 }
 
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsError() {
-	var credentials Credentials
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsTurnsBlocked() {
+	credentials := Credentials{}
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
-	tools.MarshalHash(credentials, &hashCredentials)
-	returnedCredentials := hashCredentials
+	hashed := Credentials{}
+	tools.MarshalHash(credentials, &hashed)
 
-	returnedCredentials.State = Active
-	id, _ := tools.Encrypt(credentials.Id, Secret)
-	thrown := errors.NewNotFoundError("User not found")
-	expected := errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", id), thrown)
+	saved := hashed
+	saved.Password = faker.UUID()
+	saved.Attempts = 2
+	saved.State = Active
 
-	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
-	suite.userPersistenceService.EXPECT().FindUserById(id).Return(User{}, thrown)
+	toUpdate := FullCredentials{Id: saved.Id, Password: saved.Password, Attempts: 3, State: Blocked}
+	expectedError := errors.NewAuthenticationError("Credentials not found")
+
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
+	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(toUpdate).Return(nil)
+
+	result, err := suite.authenticationService.Login(credentials)
+
+	suite.Assertions.Error(err)
+	suite.Assertions.Empty(result)
+	suite.Assertions.Equal(expectedError, err)
+}
+
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
+	credentials := Credentials{}
+	tools.FakerBuild(&credentials)
+	hashed := Credentials{}
+	tools.MarshalHash(credentials, &hashed)
+
+	saved := hashed
+	saved.State = Blocked
+
+	expectedError := errors.NewAuthenticationError("User Blocked")
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
 	suite.Assert().Error(err)
-	suite.Assert().Equal(expected, err)
+	suite.Assert().Equal(expectedError, err)
 	suite.Assert().Empty(wToken)
 }
-
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
-	var credentials Credentials
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsNotFoundInDB() {
+	credentials := Credentials{}
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
-	tools.MarshalHash(credentials, &hashCredentials)
-	returnedCredentials := hashCredentials
+	hashed := Credentials{}
+	tools.MarshalHash(credentials, &hashed)
 
-	returnedCredentials.State = Blocked
-	expectedError := errors.NewAuthenticationError("User Blocked")
-
-	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(returnedCredentials, nil)
+	returnedError := tools.NewTestError("Credentials not Found")
+	expectedError := errors.NewAuthenticationError("Credentials not found")
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(FullCredentials{}, returnedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -124,14 +153,89 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	suite.Assert().Empty(wToken)
 }
 
-func (suite *AuthenticationServiceSuite) TestLogin_failWhenCheckCredentialsFails() {
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingStateFails() {
+	credentials := Credentials{}
+	tools.FakerBuild(&credentials)
+	hashed := Credentials{}
+	tools.MarshalHash(credentials, &hashed)
+
+	saved := hashed
+	saved.Password = faker.UUID()
+	saved.Attempts = 2
+	saved.State = Active
+
+	toUpdate := FullCredentials{Id: hashed.Id, Password: saved.Password, Attempts: 3, State: Blocked}
+	returnedError := tools.NewTestError("Error updating")
+	expectedError := errors.NewGenericErrorByCause("Error updating credentials attempts", returnedError)
+
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
+	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(toUpdate).Return(returnedError)
+
+	result, err := suite.authenticationService.Login(credentials)
+
+	suite.Assertions.Error(err)
+	suite.Assertions.Empty(result)
+	suite.Assertions.Equal(expectedError, err)
+}
+
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingAtremptsFails() {
 	var credentials Credentials
 	tools.FakerBuild(&credentials)
 	var hashCredentials Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
-	expectedError := errors.NewAuthenticationError("Credentials not found")
+	returnedCredentials := hashCredentials
+	returnedCredentials.State = Active
+	var user User
+	tools.FakerBuild(&user)
+	user.Id = credentials.Id
+	user.Roles = []string{"admin", "customer"}
+	var encUser User
+	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	suite.credentialsPersistenceService.EXPECT().CheckCredentials(hashCredentials, MaxAttempts).Return(Credentials{}, expectedError)
+	savedCdt := NewFullCredentials(hashCredentials)
+	savedCdt.Password = faker.UUID()
+	savedCdt.State = Active
+	savedCdt.Attempts = 1
+
+	cdtToSave := savedCdt
+	cdtToSave.Attempts = 2
+
+	returnedError := tools.NewTestError("Error updating")
+	expectedError := errors.NewGenericErrorByCause("Error updating credentials attempts", returnedError)
+
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashCredentials.Id).Return(savedCdt, nil)
+	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(cdtToSave).Return(returnedError)
+
+	wToken, err := suite.authenticationService.Login(credentials)
+
+	suite.Assertions.Error(err)
+	suite.Assertions.Empty(wToken)
+	suite.Assertions.Equal(expectedError.Error(), err.Error())
+}
+
+func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsError() {
+	var credentials Credentials
+	tools.FakerBuild(&credentials)
+	var hashCredentials Credentials
+	tools.MarshalHash(credentials, &hashCredentials)
+	returnedCredentials := hashCredentials
+	returnedCredentials.State = Active
+
+	savedCdt := NewFullCredentials(hashCredentials)
+	savedCdt.State = Active
+	savedCdt.Attempts = 1
+
+	cdtToSave := savedCdt
+	cdtToSave.Attempts = 0
+
+	userId, _ := tools.Encrypt(credentials.Id, Secret)
+
+	returnedError := errors.NewNotFoundError("User not found")
+	expectedError := errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", userId), returnedError)
+
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashCredentials.Id).Return(savedCdt, nil)
+	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(cdtToSave).Return(nil)
+	suite.userPersistenceService.EXPECT().FindUserById(userId).Return(User{}, returnedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
