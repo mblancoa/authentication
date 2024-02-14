@@ -35,19 +35,10 @@ func NewErrorf(code Code, format string, a ...any) error {
 }
 
 func NewErrorByCause(code Code, message string, cause error) error {
-	msg := ""
-	if message != "" {
-		if cause.Error() != "" {
-			msg = fmt.Sprintf("%s\nCaused by %s", message, cause)
-		} else {
-			msg = message
-		}
-	} else {
-		msg = cause.Error()
-	}
 	return basicError{
 		Code:    code,
-		Message: msg,
+		Message: message,
+		Cause:   fmt.Sprintf("\n\tCaused by %s", cause.Error()),
 	}
 }
 
@@ -76,7 +67,7 @@ func NewAuthenticationErrorByCause(message string, cause error) error {
 }
 
 func (error basicError) Error() string {
-	return error.Message
+	return error.Message + error.Cause
 }
 
 func GetCode(err error) Code {

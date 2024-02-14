@@ -37,81 +37,6 @@ func TestCredentialsServiceSuite(t *testing.T) {
 	suite.Run(t, new(mongoDBCredentialsPersistenceServiceSuite))
 }
 
-func (suite *mongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_successful() {
-	db := CredentialsDB{}
-	tools.FakerBuild(&db)
-	db.Attempts = 1
-	db.State = core.Active
-
-	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{Id: db.Id, Password: db.Password}
-
-	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
-
-	suite.Assertions.NoError(err)
-	suite.Assertions.NotEmpty(result)
-	suite.Assertions.Equal(db.Id, result.Id)
-	suite.Assertions.Equal(db.Password, result.Password)
-	suite.Assertions.Equal(core.Active, result.State)
-
-	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
-	suite.Assertions.Equal(0, updated.Attempts)
-}
-
-func (suite *mongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentiaslWhenCredentialsGetsBlocked() {
-	db := CredentialsDB{}
-	tools.FakerBuild(&db)
-	db.Attempts = 2
-	db.State = core.Active
-
-	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{Id: db.Id, Password: faker.String()}
-
-	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
-
-	suite.Assertions.NoError(err)
-	suite.Assertions.NotEmpty(result)
-	suite.Assertions.Equal(core.Blocked, result.State)
-
-	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
-	suite.Assertions.Equal(3, updated.Attempts)
-	suite.Assertions.Equal(core.Blocked, updated.State)
-}
-
-func (suite *mongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsBlockedCredentialsWhenCredentialsWasBlocked() {
-	db := CredentialsDB{}
-	tools.FakerBuild(&db)
-	db.Attempts = 1
-	db.State = core.Blocked
-
-	insertOne(suite.credentialsCollection, context.TODO(), db)
-	credentials := core.Credentials{Id: db.Id, Password: faker.String()}
-
-	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
-
-	suite.Assertions.NoError(err)
-	suite.Assertions.NotEmpty(result)
-	suite.Assertions.Equal(core.Blocked, result.State)
-
-	updated := CredentialsDB{}
-	findOne(suite.credentialsCollection, context.TODO(), "_id", db.Id, &updated)
-	suite.Assertions.Equal(2, updated.Attempts)
-	suite.Assertions.Equal(core.Blocked, updated.State)
-}
-
-func (suite *mongoDBCredentialsPersistenceServiceSuite) TestCheckCredentials_returnsErrorWhenCredentialsNotFound() {
-	credentials := core.Credentials{}
-	tools.FakerBuild(&credentials)
-
-	result, err := suite.credentialsPersistenceService.CheckCredentials(credentials, 3)
-
-	suite.Assertions.Error(err)
-	suite.Assertions.Equal("mongo: no documents in result", err.Error())
-	suite.Assertions.Empty(result)
-}
-
 func (suite *mongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_successful() {
 	credentials := core.Credentials{}
 	tools.FakerBuild(&credentials)
@@ -143,7 +68,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUse
 	tools.FakerBuild(&db)
 	insertOne(suite.credentialsCollection, context.TODO(), &db)
 
-	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(db.Id)
+	result, err := suite.credentialsPersistenceService.FindCredentialsById(db.Id)
 
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(result)
@@ -154,7 +79,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUse
 
 func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUserId_returnsErrorWhenNotFound() {
 	id := faker.UUID()
-	result, err := suite.credentialsPersistenceService.FindCredentialsByUserId(id)
+	result, err := suite.credentialsPersistenceService.FindCredentialsById(id)
 
 	suite.Assertions.Error(err)
 	suite.Assertions.Equal(errors.NotFoundError, errors.GetCode(err))
