@@ -17,7 +17,7 @@ jobs:
       - name: Code generation
         run: |
           go install github.com/sunboyy/repogen@latest
-          go generate ./adapter/*
+          go generate ./adapters/*
       - name: Mocks generation
         run: |
           go install github.com/vektra/mockery/v2@v2.40.1
