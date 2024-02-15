@@ -9,7 +9,6 @@ import (
 
 type AuthenticationController struct {
 	BaseController
-	AuthenticationController core.AuthenticationService
 }
 
 func (c *AuthenticationController) Login() {
@@ -24,9 +23,7 @@ func (c *AuthenticationController) Login() {
 	credentials := core.Credentials{}
 	tools.Mapper(&rq, &credentials)
 
-	authenticationService := WebApplicationContext.AuthenticationService
-
-	jwt, err := authenticationService.Login(credentials)
+	jwt, err := c.AuthenticationService.Login(credentials)
 	if err != nil {
 		c.manageStatusFromError(c.Ctx.ResponseWriter, err)
 		return

@@ -2,17 +2,14 @@ package main
 
 import (
 	beego "github.com/beego/beego/v2/server/web"
-	_ "github.com/mblancoa/authentication/api"
-	"github.com/mblancoa/authentication/config"
-	_ "github.com/mblancoa/authentication/config"
+	"github.com/mblancoa/authentication/adapters"
+	"github.com/mblancoa/authentication/api"
+	"github.com/mblancoa/authentication/core"
 )
 
-func init() {
-	config.SetupMongodbConfiguration()
-	config.SetupCoreConfiguration()
-	config.SetupApiConfiguration()
-}
-
 func main() {
+	adapters.SetupMongodbConfiguration()
+	core.SetupCoreConfig()
+	api.SetupApiConfiguration()
 	beego.Run()
 }

@@ -1,4 +1,4 @@
-package config
+package api
 
 import (
 	"github.com/devfeel/mapper"
@@ -9,7 +9,6 @@ import (
 
 func SetupApiConfiguration() {
 	log.Info().Msg("Initializing api configuration")
-	controllers.WebApplicationContext.AuthenticationService = authenticationService
 	setupApiMappers()
 }
 func setupApiMappers() {

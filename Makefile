@@ -8,7 +8,7 @@ mocks:
 
 code-generation:
 	rm -fv **/*_impl.go
-	go generate ./adapter/*
+	go generate ./adapters/*
 
 test:
 	go clean -testcache
