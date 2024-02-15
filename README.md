@@ -1,6 +1,3 @@
-|       |-- auth.go
-|       |-- auth.go
-|       |-- auth.go
 # Authentication
 ## Packages
 ```
@@ -9,30 +6,30 @@ Authentication
 |   |-- error.go
 |
 |-- core
+|   |-- config.go
 |   |-- domain.go
 |   |-- service.go
 |   |-- port.go
 |
-|-- adapter
-|   |-- mongodb.go
-|   |-- mongodbrepository.go
+|-- adapters
+|   |--mongodb
+|      |-- config.go
+|      |-- service.go //persistence service implementation
+|      |-- repository.go
 |
 |-- api
 |   |-- controllers
 |       |-- base.go
 |       |-- auth.go
 |       |-- domain.go
+|   |-- config.go
 |   |-- router.go
-|
-|-- config
-|   |-- domain.go
-|   |-- core.go
-|   |-- mongodb.go
 |
 |-- main.go
 ```
+
 - **core**: contains the application domain entities, the services and interfaces which implement and define the business logic.
-- **adapter**: implementation of interfaces in port.go
+- **adapters**: implementation of interfaces being in port.go
 - **api**: API implementation
 
 ## Repositories generation

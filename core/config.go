@@ -1,10 +1,9 @@
-package config
+package core
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/devfeel/mapper"
-	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/rs/zerolog/log"
@@ -17,29 +16,40 @@ const (
 	RunMode = "RUN_MODE"
 )
 
-// ports must be initialized in the configuration of their implementation
-var credentialsPersistenceService core.CredentialsPersistenceService
-var userPersistenceService core.UserPersistenceService
+var ConfigurationFile string = getConfigFile()
+var PersistenceContext *persistenceContext = &persistenceContext{}
+var NotificationContext *notificationContext = &notificationContext{}
+var ApplicationContext *Context = &Context{}
 
-var notificationService tools.NotificationService
-var authenticationService core.AuthenticationService
+type Context struct {
+	AuthenticationService AuthenticationService
+}
+type persistenceContext struct {
+	CredentialsPersistenceService CredentialsPersistenceService
+	UserPersistenceService        UserPersistenceService
+}
+type notificationContext struct {
+	NotificationService tools.NotificationService
+}
 
-var configurationFile string = getConfigFile()
-
-func SetupCoreConfiguration() {
+func SetupCoreConfig() {
 	log.Info().Msg("Initializing core configuration")
-	// TODO initialize notificationService
-	authenticationService = core.NewAuthenticationService(notificationService, credentialsPersistenceService, userPersistenceService)
-
+	setupCoreContext()
 	setupCoreMappers()
 }
 
+func setupCoreContext() {
+	p := PersistenceContext
+	n := NotificationContext
+	ApplicationContext.AuthenticationService = NewAuthenticationService(n.NotificationService, p.CredentialsPersistenceService, p.UserPersistenceService)
+}
+
 func setupCoreMappers() {
-	err := mapper.Register(&core.FullCredentials{})
+	err := mapper.Register(&FullCredentials{})
 	errors.ManageErrorPanic(err)
-	err = mapper.Register(&core.Credentials{})
+	err = mapper.Register(&Credentials{})
 	errors.ManageErrorPanic(err)
-	err = mapper.Register(&core.User{})
+	err = mapper.Register(&User{})
 	errors.ManageErrorPanic(err)
 }
 
@@ -51,13 +61,13 @@ func getConfigFile() string {
 	return filename
 }
 
-func loadJsonConfiguration(fileName string, configObj interface{}) {
+func LoadJsonConfiguration(fileName string, configObj interface{}) {
 	bts := loadFile(fileName)
 	err := json.Unmarshal(bts, configObj)
 	errors.ManageErrorPanic(err)
 }
 
-func loadYamlConfiguration(fileName string, configObj interface{}) {
+func LoadYamlConfiguration(fileName string, configObj interface{}) {
 	bts := loadFile(fileName)
 	err := yaml.Unmarshal(bts, configObj)
 	errors.ManageErrorPanic(err)

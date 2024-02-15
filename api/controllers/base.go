@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	beego "github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/rs/zerolog/log"
@@ -13,10 +14,13 @@ type webApplicationContext struct {
 	AuthenticationService core.AuthenticationService
 }
 
-var WebApplicationContext *webApplicationContext = &webApplicationContext{}
-
-type BaseController struct { // 1
+type BaseController struct {
 	beego.Controller
+	*core.Context
+}
+
+func (c *BaseController) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
+	c.Context = core.ApplicationContext
 }
 
 func (c *BaseController) manageStatusFromError(response http.ResponseWriter, err error) {

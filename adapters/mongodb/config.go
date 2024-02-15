@@ -1,10 +1,10 @@
-package config
+package mongodb
 
 import (
 	"context"
 	"fmt"
 	"github.com/devfeel/mapper"
-	"github.com/mblancoa/authentication/adapter"
+	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,13 +26,10 @@ type mongoDbConfiguration struct {
 	} `yaml:"mongodb"`
 }
 
-var mongoDbCredentialsRepository adapter.MongoDbCredentialsRepository
-var mongoDbUserRepository adapter.MongoDbUserRepository
-
 func SetupMongodbConfiguration() {
 	log.Info().Msg("Initializing mongodb configuration")
 	var config mongoDbConfiguration
-	loadYamlConfiguration(configurationFile, &config)
+	core.LoadYamlConfiguration(core.ConfigurationFile, &config)
 
 	conn := config.Mongodb.Database.Connection
 	connectionString := fmt.Sprintf("%s:%s//%s:%d", conn.Username, os.Getenv(conn.Password), conn.Host, conn.Port)
@@ -44,16 +41,21 @@ func SetupMongodbConfiguration() {
 	errors.ManageErrorPanic(err)
 
 	database := client.Database(config.Mongodb.Database.Name)
-	mongoDbCredentialsRepository = adapter.NewMongoDbCredentialsRepository(database.Collection(adapter.CredentialsCollection))
-	mongoDbUserRepository = adapter.NewMongoDbUserRepository(database.Collection(adapter.UserCollection))
-	credentialsPersistenceService = adapter.NewMongoDbCredentialsService(mongoDbCredentialsRepository)
-	userPersistenceService = adapter.NewMongoDbUserService(mongoDbUserRepository)
+	setupPersistenceContext(database)
 	setupMongoDBMappers()
 }
 
+func setupPersistenceContext(database *mongo.Database) {
+	mongoDbCredentialsRepository := NewMongoDbCredentialsRepository(database.Collection(CredentialsCollection))
+	mongoDbUserRepository := NewMongoDbUserRepository(database.Collection(UserCollection))
+	persistenceCtx := core.PersistenceContext
+	persistenceCtx.CredentialsPersistenceService = NewMongoDbCredentialsService(mongoDbCredentialsRepository)
+	persistenceCtx.UserPersistenceService = NewMongoDbUserService(mongoDbUserRepository)
+}
+
 func setupMongoDBMappers() {
-	err := mapper.Register(&adapter.UserDB{})
+	err := mapper.Register(&UserDB{})
 	errors.ManageErrorPanic(err)
-	err = mapper.Register(&adapter.CredentialsDB{})
+	err = mapper.Register(&CredentialsDB{})
 	errors.ManageErrorPanic(err)
 }
