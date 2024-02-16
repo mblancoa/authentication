@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/mblancoa/authentication/core/domain"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"text/template"
@@ -19,7 +21,7 @@ const (
 // TODO review that, is it needed to be an interface?
 type AuthenticationService interface {
 	// Login checks the authenticity of the user and returns its jws
-	Login(credentials Credentials) (string, error)
+	Login(credentials domain.Credentials) (string, error)
 
 	// ValidateJWT validates a given jwt
 	ValidateJWT(jwt string) (bool, error)
@@ -27,19 +29,19 @@ type AuthenticationService interface {
 	// RefreshJWT generates a new jwt
 	RefreshJWT(jwt string) (string, error)
 
-	StartSingUP(user User) error
-	SingUP(confirmation ConfirmationCredentials) error
+	StartSingUP(user domain.User) error
+	SingUP(confirmation domain.ConfirmationCredentials) error
 }
 
 type authenticationService struct {
 	notificationsTemplates        *template.Template
-	notificationService           tools.NotificationService
-	credentialsPersistenceService CredentialsPersistenceService
-	userPersistenceService        UserPersistenceService
+	notificationService           ports.NotificationService
+	credentialsPersistenceService ports.CredentialsPersistenceService
+	userPersistenceService        ports.UserPersistenceService
 }
 
-func NewAuthenticationService(notificationService tools.NotificationService, credentialsPersistenceService CredentialsPersistenceService,
-	userPersistenceService UserPersistenceService) AuthenticationService {
+func NewAuthenticationService(notificationService ports.NotificationService, credentialsPersistenceService ports.CredentialsPersistenceService,
+	userPersistenceService ports.UserPersistenceService) AuthenticationService {
 	service := authenticationService{
 		notificationsTemplates:        template.Must(template.ParseGlob("./templates/*.txt")),
 		notificationService:           notificationService,
@@ -49,8 +51,8 @@ func NewAuthenticationService(notificationService tools.NotificationService, cre
 	return &service
 }
 
-func (a *authenticationService) Login(credentials Credentials) (string, error) {
-	var hashedCredentials Credentials
+func (a *authenticationService) Login(credentials domain.Credentials) (string, error) {
+	var hashedCredentials domain.Credentials
 	tools.MarshalHash(credentials, &hashedCredentials)
 
 	state, err := a.checkCredentials(hashedCredentials, MaxAttempts)
@@ -60,7 +62,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 		}
 		return "", err
 	}
-	if state.State == Blocked {
+	if state.State == domain.Blocked {
 		return "", errors.NewAuthenticationError("User Blocked")
 	}
 
@@ -74,7 +76,7 @@ func (a *authenticationService) Login(credentials Credentials) (string, error) {
 		return "", errors.NewGenericErrorByCause(fmt.Sprintf("Error finding user %s", userId), err)
 	}
 
-	var decUser User
+	var decUser domain.User
 	err = tools.UnmarshalCrypt(user, &decUser, Secret)
 	if err != nil {
 		return "", err
@@ -111,12 +113,12 @@ func (a *authenticationService) RefreshJWT(token string) (string, error) {
 
 }
 
-func (a *authenticationService) StartSingUP(user User) error {
+func (a *authenticationService) StartSingUP(user domain.User) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *authenticationService) SingUP(confirmation ConfirmationCredentials) error {
+func (a *authenticationService) SingUP(confirmation domain.ConfirmationCredentials) error {
 	//TODO implement me
 	panic("implement me")
 }
@@ -127,41 +129,41 @@ func (a *authenticationService) SingUP(confirmation ConfirmationCredentials) err
 // credentials get blocked.
 //
 // credentials must be hashed
-func (a *authenticationService) checkCredentials(credentials Credentials, maxAttempts int) (Credentials, error) {
+func (a *authenticationService) checkCredentials(credentials domain.Credentials, maxAttempts int) (domain.Credentials, error) {
 	savedCredentials, err := a.credentialsPersistenceService.FindCredentialsById(credentials.Id)
 	if err != nil {
-		return Credentials{}, errors.NewNotFoundError(err.Error())
+		return domain.Credentials{}, errors.NewNotFoundError(err.Error())
 	}
 	if savedCredentials.Password != credentials.Password {
 		savedCredentials.Attempts++
 		if savedCredentials.Attempts == 3 {
-			savedCredentials.State = Blocked
+			savedCredentials.State = domain.Blocked
 		}
 		err = a.credentialsPersistenceService.UpdateCredentials(savedCredentials)
 		if err != nil {
-			return Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
+			return domain.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials attempts", err)
 		}
-		return Credentials{}, errors.NewNotFoundError("credentials not found")
-	} else if savedCredentials.State == Active && savedCredentials.Attempts != 0 {
+		return domain.Credentials{}, errors.NewNotFoundError("credentials not found")
+	} else if savedCredentials.State == domain.Active && savedCredentials.Attempts != 0 {
 		savedCredentials.Attempts = 0
 		err = a.credentialsPersistenceService.UpdateCredentials(savedCredentials)
 		if err != nil {
-			return Credentials{}, errors.NewGenericErrorByCause("Error updating credentials state", err)
+			return domain.Credentials{}, errors.NewGenericErrorByCause("Error updating credentials state", err)
 		}
 	}
-	var result Credentials
+	var result domain.Credentials
 	tools.Mapper(&savedCredentials, &result)
 
 	return result, nil
 }
 
-func getJwt(claims CustomClaims, key string) (string, error) {
+func getJwt(claims domain.CustomClaims, key string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(key))
 }
 
-func getJwtFromUser(user User, key string) (string, error) {
-	claims := CustomClaims{
+func getJwtFromUser(user domain.User, key string) (string, error) {
+	claims := domain.CustomClaims{
 		jwt.StandardClaims{
 			Id:        user.Id,
 			ExpiresAt: time.Now().Add(time.Minute * time.Duration(10)).Unix(),
@@ -171,8 +173,8 @@ func getJwtFromUser(user User, key string) (string, error) {
 	return getJwt(claims, key)
 }
 
-func decodeJWT(token string, key string) (*CustomClaims, error) {
-	var claims CustomClaims // custom claims
+func decodeJWT(token string, key string) (*domain.CustomClaims, error) {
+	var claims domain.CustomClaims // custom claims
 	_, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) {
 		return []byte(key), nil // using a config struct to handle the secret
 	})

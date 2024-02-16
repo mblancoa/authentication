@@ -2,7 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/domain"
 	"time"
 )
 
@@ -21,13 +21,13 @@ type UserDB struct {
 }
 
 type CredentialsDB struct {
-	Id            string               `bson:"_id,omitempty"`
-	Password      string               `bson:"password"`
-	State         core.CredentialState `bson:"state"`
-	LastPasswords []string             `bson:"last_passwords,omitempty"`
-	Attempts      int                  `bson:"attempts"`
-	Last          time.Time            `bson:"last"`
-	Version       int64                `bson:"version"`
+	Id            string                 `bson:"_id,omitempty"`
+	Password      string                 `bson:"password"`
+	State         domain.CredentialState `bson:"state"`
+	LastPasswords []string               `bson:"last_passwords,omitempty"`
+	Attempts      int                    `bson:"attempts"`
+	Last          time.Time              `bson:"last"`
+	Version       int64                  `bson:"version"`
 }
 
 //go:generate repogen -dest=mongodbcredentialsrepository_impl.go -model=CredentialsDB -repo=MongoDbCredentialsRepository

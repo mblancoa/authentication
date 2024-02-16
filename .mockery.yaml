@@ -6,8 +6,11 @@ filename: "{{.MockName}}.go"
 dir: "{{.PackageName}}"
 inpackage: True
 all: True
+recursive: True
 packages:
-  github.com/mblancoa/authentication/core:
-  github.com/mblancoa/authentication/tools:
+  github.com/mblancoa/authentication/core/ports:
+    config:
+      dir: "./core/ports"
+#  github.com/mblancoa/authentication/tools:
 #  github.com/mblancoa/authentication/adapters:
 # Lots more config...

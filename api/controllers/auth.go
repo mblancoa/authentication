@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/domain"
 	"github.com/mblancoa/authentication/tools"
 	"net/http"
 )
@@ -20,7 +20,7 @@ func (c *AuthenticationController) Login() {
 		return
 	}
 
-	credentials := core.Credentials{}
+	credentials := domain.Credentials{}
 	tools.Mapper(&rq, &credentials)
 
 	jwt, err := c.AuthenticationService.Login(credentials)
