@@ -6,10 +6,13 @@ Authentication
 |   |-- error.go
 |
 |-- core
+|   |-- ports
+|       |-- notifications.go
+|       |-- persistence.go
+|   |-- domain
+|       |-- domain.go
 |   |-- config.go
-|   |-- domain.go
 |   |-- service.go
-|   |-- port.go
 |
 |-- adapters
 |   |--mongodb

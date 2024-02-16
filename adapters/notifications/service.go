@@ -1,14 +1,11 @@
-package tools
+package notifications
 
-type NotificationService interface {
-	SendSMS(template string, source any, numberPhone string)
-	SendEmail(template string, source any, email string)
-}
+import "github.com/mblancoa/authentication/core/ports"
 
 type notificationService struct {
 }
 
-func NewNotificationService() NotificationService {
+func NewNotificationService() ports.NotificationService {
 	return &notificationService{}
 }
 

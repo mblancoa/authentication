@@ -3,7 +3,8 @@ package mongodb
 import (
 	"context"
 	"github.com/devfeel/mapper"
-	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/domain"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/pioz/faker"
@@ -15,7 +16,7 @@ import (
 
 type mongoDBCredentialsPersistenceServiceSuite struct {
 	mongoDBPersistenceSuite
-	credentialsPersistenceService core.CredentialsPersistenceService
+	credentialsPersistenceService ports.CredentialsPersistenceService
 }
 
 func (suite *mongoDBCredentialsPersistenceServiceSuite) SetupSuite() {
@@ -38,7 +39,7 @@ func TestCredentialsServiceSuite(t *testing.T) {
 }
 
 func (suite *mongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_successful() {
-	credentials := core.Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
 
 	result, err := suite.credentialsPersistenceService.InsertCredentials(credentials)
@@ -50,7 +51,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_su
 }
 
 func (suite *mongoDBCredentialsPersistenceServiceSuite) TestInsertCredentials_returnsErrorWhenCredentialsWithSameUserIdExists() {
-	credentials := core.Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
 	db := CredentialsDB{}
 	_ = mapper.Mapper(&credentials, &db)
@@ -72,7 +73,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestFindCredentialsByUse
 
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(result)
-	credentials := core.FullCredentials{}
+	credentials := domain.FullCredentials{}
 	tools.Mapper(&db, &credentials)
 	suite.Assertions.Equal(credentials, result)
 }
@@ -92,7 +93,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestUpdateCredentials_su
 	id := db.Id
 	insertOne(suite.credentialsCollection, context.TODO(), &db)
 
-	toUpdate := core.FullCredentials{}
+	toUpdate := domain.FullCredentials{}
 	tools.FakerBuild(&toUpdate)
 	toUpdate.Id = id
 
@@ -101,7 +102,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestUpdateCredentials_su
 	suite.Assertions.NoError(err)
 	updatedDb := CredentialsDB{}
 	findOne(suite.credentialsCollection, context.TODO(), "_id", id, &updatedDb)
-	updated := core.FullCredentials{}
+	updated := domain.FullCredentials{}
 	tools.Mapper(&updatedDb, &updated)
 	suite.Assertions.Equal(toUpdate, updated)
 }
@@ -110,7 +111,7 @@ func (suite *mongoDBCredentialsPersistenceServiceSuite) TestUpdateCredentials_su
 
 type mongoDBUserPersistenceServiceSuite struct {
 	mongoDBPersistenceSuite
-	userPersistenceService core.UserPersistenceService
+	userPersistenceService ports.UserPersistenceService
 }
 
 func (suite *mongoDBUserPersistenceServiceSuite) SetupSuite() {
@@ -142,7 +143,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestFindUserById_successful() {
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(user)
 
-	updated := core.User{}
+	updated := domain.User{}
 	tools.Mapper(&db, &updated)
 	suite.Assertions.Equal(updated, user)
 }
@@ -166,7 +167,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestFindUserByEmail_successful(
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(user)
 
-	updated := core.User{}
+	updated := domain.User{}
 	tools.Mapper(&db, &updated)
 	suite.Assertions.Equal(updated, user)
 }
@@ -190,7 +191,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestFindUserByPhoneNumber_succe
 	suite.Assertions.NoError(err)
 	suite.Assertions.NotEmpty(user)
 
-	updated := core.User{}
+	updated := domain.User{}
 	tools.Mapper(&db, &updated)
 	suite.Assertions.Equal(updated, user)
 }
@@ -205,7 +206,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestFindUserByPhoneNumber_retur
 }
 
 func (suite *mongoDBUserPersistenceServiceSuite) TestInsertUser_successful() {
-	user := core.User{}
+	user := domain.User{}
 	tools.FakerBuild(&user)
 
 	returned, err := suite.userPersistenceService.InsertUser(user)
@@ -221,7 +222,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestInsertUser_returnsErrorWhen
 	tools.FakerBuild(&db)
 	insertOne(suite.userCollection, context.TODO(), &db)
 
-	user := core.User{}
+	user := domain.User{}
 	tools.FakerBuild(&user)
 	user.Id = db.Id
 
@@ -238,7 +239,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestUpdateUser_successful() {
 	id := db.Id
 	insertOne(suite.userCollection, context.TODO(), &db)
 
-	toUpdate := core.User{}
+	toUpdate := domain.User{}
 	tools.FakerBuild(&toUpdate)
 	toUpdate.Id = id
 
@@ -247,7 +248,7 @@ func (suite *mongoDBUserPersistenceServiceSuite) TestUpdateUser_successful() {
 	suite.Assertions.NoError(err)
 	updatedDb := UserDB{}
 	findOne(suite.userCollection, context.TODO(), "_id", id, &updatedDb)
-	updated := core.User{}
+	updated := domain.User{}
 	tools.Mapper(&updatedDb, &updated)
 	suite.Assertions.Equal(toUpdate, updated)
 }

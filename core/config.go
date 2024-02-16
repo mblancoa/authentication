@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/devfeel/mapper"
+	"github.com/mblancoa/authentication/core/domain"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/errors"
-	"github.com/mblancoa/authentication/tools"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -25,11 +26,11 @@ type Context struct {
 	AuthenticationService AuthenticationService
 }
 type persistenceContext struct {
-	CredentialsPersistenceService CredentialsPersistenceService
-	UserPersistenceService        UserPersistenceService
+	CredentialsPersistenceService ports.CredentialsPersistenceService
+	UserPersistenceService        ports.UserPersistenceService
 }
 type notificationContext struct {
-	NotificationService tools.NotificationService
+	NotificationService ports.NotificationService
 }
 
 func SetupCoreConfig() {
@@ -45,11 +46,11 @@ func setupCoreContext() {
 }
 
 func setupCoreMappers() {
-	err := mapper.Register(&FullCredentials{})
+	err := mapper.Register(&domain.FullCredentials{})
 	errors.ManageErrorPanic(err)
-	err = mapper.Register(&Credentials{})
+	err = mapper.Register(&domain.Credentials{})
 	errors.ManageErrorPanic(err)
-	err = mapper.Register(&User{})
+	err = mapper.Register(&domain.User{})
 	errors.ManageErrorPanic(err)
 }
 

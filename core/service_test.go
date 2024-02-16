@@ -3,6 +3,8 @@ package core
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/mblancoa/authentication/core/domain"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/pioz/faker"
@@ -14,17 +16,17 @@ import (
 
 type AuthenticationServiceSuite struct {
 	suite.Suite
-	notificationService           *tools.MockNotificationService
-	credentialsPersistenceService *MockCredentialsPersistenceService
-	userPersistenceService        *MockUserPersistenceService
+	notificationService           *ports.MockNotificationService
+	credentialsPersistenceService *ports.MockCredentialsPersistenceService
+	userPersistenceService        *ports.MockUserPersistenceService
 	authenticationService         AuthenticationService
 }
 
 func (suite *AuthenticationServiceSuite) SetupSuite() {
 	_ = os.Chdir("./..")
-	suite.notificationService = tools.NewMockNotificationService(suite.T())
-	suite.credentialsPersistenceService = NewMockCredentialsPersistenceService(suite.T())
-	suite.userPersistenceService = NewMockUserPersistenceService(suite.T())
+	suite.notificationService = ports.NewMockNotificationService(suite.T())
+	suite.credentialsPersistenceService = ports.NewMockCredentialsPersistenceService(suite.T())
+	suite.userPersistenceService = ports.NewMockUserPersistenceService(suite.T())
 	suite.authenticationService = NewAuthenticationService(suite.notificationService, suite.credentialsPersistenceService, suite.userPersistenceService)
 }
 
@@ -33,23 +35,23 @@ func TestAuthenticationServiceSuite(t *testing.T) {
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_successful() {
-	var credentials Credentials
+	var credentials domain.Credentials
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
+	var hashCredentials domain.Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 
 	returnedCredentials := hashCredentials
-	returnedCredentials.State = Active
+	returnedCredentials.State = domain.Active
 
-	var user User
+	var user domain.User
 	tools.FakerBuild(&user)
 	user.Id = credentials.Id
 	user.Roles = []string{"admin", "customer"}
-	var encUser User
+	var encUser domain.User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	savedCdt := NewFullCredentials(hashCredentials)
-	savedCdt.State = Active
+	savedCdt := domain.NewFullCredentials(hashCredentials)
+	savedCdt.State = domain.Active
 	savedCdt.Attempts = 1
 
 	cdtToSave := savedCdt
@@ -70,16 +72,16 @@ func (suite *AuthenticationServiceSuite) TestLogin_successful() {
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
-	var credentials Credentials
+	var credentials domain.Credentials
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
+	var hashCredentials domain.Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 
-	savedCdt := NewFullCredentials(hashCredentials)
-	savedCdt.State = Active
+	savedCdt := domain.NewFullCredentials(hashCredentials)
+	savedCdt.State = domain.Active
 	savedCdt.Attempts = 0
 
-	var user User
+	var user domain.User
 	tools.FakerBuild(&user)
 	id, _ := tools.Encrypt(credentials.Id, Secret)
 	user.Id = id
@@ -95,20 +97,20 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenErrorUnmarshaling() {
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsTurnsBlocked() {
-	credentials := Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
-	hashed := Credentials{}
+	hashed := domain.Credentials{}
 	tools.MarshalHash(credentials, &hashed)
 
 	saved := hashed
 	saved.Password = faker.UUID()
 	saved.Attempts = 2
-	saved.State = Active
+	saved.State = domain.Active
 
-	toUpdate := FullCredentials{Id: saved.Id, Password: saved.Password, Attempts: 3, State: Blocked}
+	toUpdate := domain.FullCredentials{Id: saved.Id, Password: saved.Password, Attempts: 3, State: domain.Blocked}
 	expectedError := errors.NewAuthenticationError("Credentials not found")
 
-	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(domain.NewFullCredentials(saved), nil)
 	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(toUpdate).Return(nil)
 
 	result, err := suite.authenticationService.Login(credentials)
@@ -119,16 +121,16 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsTurnsBlock
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
-	credentials := Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
-	hashed := Credentials{}
+	hashed := domain.Credentials{}
 	tools.MarshalHash(credentials, &hashed)
 
 	saved := hashed
-	saved.State = Blocked
+	saved.State = domain.Blocked
 
 	expectedError := errors.NewAuthenticationError("User Blocked")
-	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(domain.NewFullCredentials(saved), nil)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -137,14 +139,14 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUserIsBlocked() {
 	suite.Assert().Empty(wToken)
 }
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsNotFoundInDB() {
-	credentials := Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
-	hashed := Credentials{}
+	hashed := domain.Credentials{}
 	tools.MarshalHash(credentials, &hashed)
 
 	returnedError := tools.NewTestError("Credentials not Found")
 	expectedError := errors.NewAuthenticationError("Credentials not found")
-	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(FullCredentials{}, returnedError)
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(domain.FullCredentials{}, returnedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -154,21 +156,21 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenCredentialsNotFoundIn
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingStateFails() {
-	credentials := Credentials{}
+	credentials := domain.Credentials{}
 	tools.FakerBuild(&credentials)
-	hashed := Credentials{}
+	hashed := domain.Credentials{}
 	tools.MarshalHash(credentials, &hashed)
 
 	saved := hashed
 	saved.Password = faker.UUID()
 	saved.Attempts = 2
-	saved.State = Active
+	saved.State = domain.Active
 
-	toUpdate := FullCredentials{Id: hashed.Id, Password: saved.Password, Attempts: 3, State: Blocked}
+	toUpdate := domain.FullCredentials{Id: hashed.Id, Password: saved.Password, Attempts: 3, State: domain.Blocked}
 	returnedError := tools.NewTestError("Error updating")
 	expectedError := errors.NewGenericErrorByCause("Error updating credentials attempts", returnedError)
 
-	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(NewFullCredentials(saved), nil)
+	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashed.Id).Return(domain.NewFullCredentials(saved), nil)
 	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(toUpdate).Return(returnedError)
 
 	result, err := suite.authenticationService.Login(credentials)
@@ -179,22 +181,22 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingStateFails() 
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingAtremptsFails() {
-	var credentials Credentials
+	var credentials domain.Credentials
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
+	var hashCredentials domain.Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
-	returnedCredentials.State = Active
-	var user User
+	returnedCredentials.State = domain.Active
+	var user domain.User
 	tools.FakerBuild(&user)
 	user.Id = credentials.Id
 	user.Roles = []string{"admin", "customer"}
-	var encUser User
+	var encUser domain.User
 	_ = tools.MarshalCrypt(user, &encUser, Secret)
 
-	savedCdt := NewFullCredentials(hashCredentials)
+	savedCdt := domain.NewFullCredentials(hashCredentials)
 	savedCdt.Password = faker.UUID()
-	savedCdt.State = Active
+	savedCdt.State = domain.Active
 	savedCdt.Attempts = 1
 
 	cdtToSave := savedCdt
@@ -214,15 +216,15 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenUpdatingAtremptsFails
 }
 
 func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsError() {
-	var credentials Credentials
+	var credentials domain.Credentials
 	tools.FakerBuild(&credentials)
-	var hashCredentials Credentials
+	var hashCredentials domain.Credentials
 	tools.MarshalHash(credentials, &hashCredentials)
 	returnedCredentials := hashCredentials
-	returnedCredentials.State = Active
+	returnedCredentials.State = domain.Active
 
-	savedCdt := NewFullCredentials(hashCredentials)
-	savedCdt.State = Active
+	savedCdt := domain.NewFullCredentials(hashCredentials)
+	savedCdt.State = domain.Active
 	savedCdt.Attempts = 1
 
 	cdtToSave := savedCdt
@@ -235,7 +237,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 
 	suite.credentialsPersistenceService.EXPECT().FindCredentialsById(hashCredentials.Id).Return(savedCdt, nil)
 	suite.credentialsPersistenceService.EXPECT().UpdateCredentials(cdtToSave).Return(nil)
-	suite.userPersistenceService.EXPECT().FindUserById(userId).Return(User{}, returnedError)
+	suite.userPersistenceService.EXPECT().FindUserById(userId).Return(domain.User{}, returnedError)
 
 	wToken, err := suite.authenticationService.Login(credentials)
 
@@ -245,7 +247,7 @@ func (suite *AuthenticationServiceSuite) TestLogin_failWhenFindUserByIdReturnsEr
 }
 
 func (suite *AuthenticationServiceSuite) TestValidateJWT_successful() {
-	var user User
+	var user domain.User
 	tools.FakerBuild(&user)
 	j, _ := getJwtFromUser(user, SecretJwt)
 
@@ -269,7 +271,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsNotAnJWT
 func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired() {
 	id := faker.Username()
 
-	claims := CustomClaims{
+	claims := domain.CustomClaims{
 		jwt.StandardClaims{
 			Id:        id,
 			ExpiresAt: time.Now().Add(time.Minute * -1).Unix(),
@@ -288,7 +290,7 @@ func (suite *AuthenticationServiceSuite) TestValidateJWT_failWhenTokenIsExpired(
 func (suite *AuthenticationServiceSuite) TestRefreshJWT_successful() {
 	id := faker.Username()
 
-	claims := CustomClaims{
+	claims := domain.CustomClaims{
 		jwt.StandardClaims{
 			Id:        id,
 			ExpiresAt: time.Now().Add(time.Minute).Unix(),
