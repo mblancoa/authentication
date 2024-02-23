@@ -9,6 +9,7 @@ Authentication
 |   |-- ports
 |       |-- notifications.go
 |       |-- persistence.go
+|       |-- cache.go
 |   |-- domain
 |       |-- domain.go
 |   |-- config.go
