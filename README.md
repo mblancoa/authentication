@@ -19,6 +19,12 @@ Authentication
 |      |-- config.go
 |      |-- service.go //persistence service implementation
 |      |-- repository.go
+|   |--cache
+|      |-- config.go
+|      |-- client.go 
+|   |--notifications
+|      |-- config.go
+|      |-- service.go 
 |
 |-- api
 |   |-- controllers

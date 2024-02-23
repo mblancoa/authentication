@@ -29,7 +29,7 @@ type mongoDbConfiguration struct {
 func SetupMongodbConfiguration() {
 	log.Info().Msg("Initializing mongodb configuration")
 	var config mongoDbConfiguration
-	core.LoadYamlConfiguration(core.ConfigurationFile, &config)
+	core.LoadYamlConfiguration(core.GetConfigFile(), &config)
 
 	conn := config.Mongodb.Database.Connection
 	connectionString := fmt.Sprintf("%s:%s//%s:%d", conn.Username, os.Getenv(conn.Password), conn.Host, conn.Port)

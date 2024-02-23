@@ -17,10 +17,11 @@ const (
 	RunMode = "RUN_MODE"
 )
 
-var ConfigurationFile string = getConfigFile()
 var PersistenceContext *persistenceContext = &persistenceContext{}
 var NotificationContext *notificationContext = &notificationContext{}
+var CacheContext *cacheContext = &cacheContext{}
 var ApplicationContext *Context = &Context{}
+var configFile string
 
 type Context struct {
 	AuthenticationService AuthenticationService
@@ -31,6 +32,10 @@ type persistenceContext struct {
 }
 type notificationContext struct {
 	NotificationService ports.NotificationService
+}
+type cacheContext struct {
+	CheckEmailCache       ports.Cache
+	CodeConfirmationCache ports.Cache
 }
 
 func SetupCoreConfig() {
@@ -54,12 +59,16 @@ func setupCoreMappers() {
 	errors.ManageErrorPanic(err)
 }
 
-func getConfigFile() string {
-	filename := "conf/application.yml"
-	if os.Getenv(RunMode) != "" {
-		filename = fmt.Sprintf("conf/%s.application.yml", os.Getenv(RunMode))
+func GetConfigFile() string {
+	if configFile == "" {
+		mode := os.Getenv(RunMode)
+		if mode != "" {
+			configFile = fmt.Sprintf("conf/%s.application.yml", mode)
+		} else {
+			configFile = "conf/application.yml"
+		}
 	}
-	return filename
+	return configFile
 }
 
 func LoadJsonConfiguration(fileName string, configObj interface{}) {
