@@ -1,4 +1,5 @@
 # Authentication
+This project is intended to be a set of proofs of concept, so its business logic should not be considered
 ## Packages
 ```
 Authentication
@@ -9,6 +10,7 @@ Authentication
 |   |-- ports
 |       |-- notifications.go
 |       |-- persistence.go
+|       |-- cache.go
 |   |-- domain
 |       |-- domain.go
 |   |-- config.go
@@ -19,6 +21,12 @@ Authentication
 |      |-- config.go
 |      |-- service.go //persistence service implementation
 |      |-- repository.go
+|   |--cache
+|      |-- config.go
+|      |-- client.go 
+|   |--notifications
+|      |-- config.go
+|      |-- service.go 
 |
 |-- api
 |   |-- controllers

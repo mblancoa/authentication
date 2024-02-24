@@ -6,7 +6,7 @@ mongodb:
       host: localhost
       port: 27017
       username: mongodb
-      password: DB_PASSWORD
+      password: TEST_DB_PASSWORD
 
 # Redis caches configuration
 define: &redis_options
@@ -19,9 +19,9 @@ redis:
     options:
       <<: *redis_options
     timeout: 5m
-    key_pattern: "check-email:*"
+    key_pattern: "test-check-email:*"
   code_confirmation:
     options:
       <<: *redis_options
     timeout: 5m
-    key_pattern: "code-confirmation:*"
+    key_pattern: "test-code-confirmation:*"

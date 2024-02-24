@@ -3,3 +3,4 @@
 .idea/
 Mock*.go
 *_impl.go
+/notas.txt
