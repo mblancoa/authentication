@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/mblancoa/authentication/core/ports"
 	"github.com/redis/go-redis/v9"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -15,9 +16,9 @@ type redisClient struct {
 	timeout    time.Duration
 }
 
-func NewCache(keyPattern string, timeout time.Duration, otp *redis.Options) ports.Cache {
+func NewCache(keyPattern string, timeout time.Duration, client *redis.Client) ports.Cache {
 	return &redisClient{
-		Client:     redis.NewClient(otp),
+		Client:     client,
 		keyPattern: keyPattern,
 		timeout:    timeout,
 	}
@@ -25,7 +26,14 @@ func NewCache(keyPattern string, timeout time.Duration, otp *redis.Options) port
 
 func (r *redisClient) Set(key string, v interface{}) error {
 	k := r.generateKey(key)
-	return r.Client.Set(context.Background(), k, v, r.timeout).Err()
+	if v == nil || reflect.TypeOf(v).Name() == "string" {
+		return r.Client.Set(context.Background(), k, v, r.timeout).Err()
+	}
+	bts, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	return r.Client.Set(context.Background(), k, string(bts), r.timeout).Err()
 }
 
 func (r *redisClient) Get(key string, v interface{}) error {

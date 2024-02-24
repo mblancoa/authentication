@@ -1,4 +1,5 @@
 # Authentication
+This project is intended to be a set of proofs of concept, so its business logic should not be considered
 ## Packages
 ```
 Authentication

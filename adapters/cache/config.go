@@ -1,8 +1,10 @@
 package cache
 
 import (
+	"context"
 	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/core/ports"
+	"github.com/mblancoa/authentication/errors"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
@@ -42,6 +44,8 @@ func setupCacheContext(config configuration) {
 func newCache(c cacheConfig) ports.Cache {
 	opt := &redis.Options{}
 	tools.Mapper(&c.Options, opt)
-
-	return NewCache(c.KeyPattern, c.Timeout, opt)
+	client := redis.NewClient(opt)
+	_, err := client.Ping(context.Background()).Result()
+	errors.ManageErrorPanic(err)
+	return NewCache(c.KeyPattern, c.Timeout, client)
 }
