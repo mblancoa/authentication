@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"github.com/alicebob/miniredis/v2"
 	"github.com/mblancoa/authentication/core"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/stretchr/testify/assert"
@@ -39,6 +40,11 @@ func TestLoadConfiguration(t *testing.T) {
 }
 
 func TestSetupRedisCacheConfiguration(t *testing.T) {
+	mini := miniredis.NewMiniRedis()
+	err := mini.StartAddr("localhost:6379")
+	tools.ManageTestError(err)
+	defer mini.Close()
+
 	SetupRedisCacheConfiguration()
 
 	assert.NotEmpty(t, core.CacheContext)
