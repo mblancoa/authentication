@@ -20,7 +20,7 @@ func init() {
 }
 
 func setupDB() {
-	server, err := mim.StartWithOptions(context.TODO(), "5.0.2", mim.WithPort(27017))
+	server, err := mim.StartWithOptions(context.TODO(), "5.0.2", mim.WithPort(37017))
 	tools.ManageTestError(err)
 	mongodbServer = server
 }
@@ -41,7 +41,7 @@ func TestLoadConfiguration(t *testing.T) {
 	con := db.Connection
 	assert.NotEmpty(t, con)
 	assert.Equal(t, "localhost", con.Host)
-	assert.Equal(t, int(27017), con.Port)
+	assert.Equal(t, int(37017), con.Port)
 	assert.Equal(t, "mongodb", con.Username)
 	assert.Equal(t, "TEST_DB_PASSWORD", con.Password)
 }

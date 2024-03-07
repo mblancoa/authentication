@@ -4,13 +4,13 @@ mongodb:
     name: auth
     connection:
       host: localhost
-      port: 27017
+      port: 37017
       username: mongodb
       password: TEST_DB_PASSWORD
 
 # Redis caches configuration
 define: &redis_options
-  addr: "localhost:6379"
+  addr: "localhost:16379"
   password: "" #no password set
   db: 0
 

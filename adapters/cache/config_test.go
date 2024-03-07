@@ -21,7 +21,7 @@ func TestLoadConfiguration(t *testing.T) {
 	var config configuration
 	core.LoadYamlConfiguration(core.GetConfigFile(), &config)
 
-	opt := options{Addr: "localhost:6379", Password: "", DB: 0}
+	opt := options{Addr: "localhost:16379", Password: "", DB: 0}
 	timeout := time.Duration(5) * time.Minute
 	assert.NotEmpty(t, config)
 	assert.NotEmpty(t, config.Redis)
@@ -41,7 +41,7 @@ func TestLoadConfiguration(t *testing.T) {
 
 func TestSetupRedisCacheConfiguration(t *testing.T) {
 	mini := miniredis.NewMiniRedis()
-	err := mini.StartAddr("localhost:6379")
+	err := mini.StartAddr("localhost:16379")
 	tools.ManageTestError(err)
 	defer mini.Close()
 
