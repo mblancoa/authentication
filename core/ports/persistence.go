@@ -4,6 +4,13 @@ import (
 	"github.com/mblancoa/authentication/core/domain"
 )
 
+var PersistenceContext *persistenceContext = &persistenceContext{}
+
+type persistenceContext struct {
+	CredentialsPersistenceService CredentialsPersistenceService
+	UserPersistenceService        UserPersistenceService
+}
+
 // CredentialsPersistenceService defines operations related to the user credentials persistence
 type CredentialsPersistenceService interface {
 
