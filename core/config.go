@@ -18,7 +18,6 @@ const (
 )
 
 var NotificationContext *notificationContext = &notificationContext{}
-var CacheContext *cacheContext = &cacheContext{}
 var ApplicationContext *Context = &Context{}
 var configFile string
 
@@ -27,10 +26,6 @@ type Context struct {
 }
 type notificationContext struct {
 	NotificationService ports.NotificationService
-}
-type cacheContext struct {
-	CheckEmailCache       ports.Cache
-	CodeConfirmationCache ports.Cache
 }
 
 func SetupCoreConfig() {

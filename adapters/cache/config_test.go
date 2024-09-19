@@ -3,6 +3,7 @@ package cache
 import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -47,7 +48,7 @@ func TestSetupRedisCacheConfiguration(t *testing.T) {
 
 	SetupRedisCacheConfiguration()
 
-	assert.NotEmpty(t, core.CacheContext)
-	assert.NotEmpty(t, core.CacheContext.CheckEmailCache)
-	assert.NotEmpty(t, core.CacheContext.CodeConfirmationCache)
+	assert.NotEmpty(t, ports.CacheContext)
+	assert.NotEmpty(t, ports.CacheContext.CheckEmailCache)
+	assert.NotEmpty(t, ports.CacheContext.CodeConfirmationCache)
 }

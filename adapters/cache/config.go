@@ -37,8 +37,8 @@ func SetupRedisCacheConfiguration() {
 }
 
 func setupCacheContext(config configuration) {
-	core.CacheContext.CheckEmailCache = newCache(config.Redis.CheckEmailCache)
-	core.CacheContext.CodeConfirmationCache = newCache(config.Redis.CodeConfirmationCache)
+	ports.CacheContext.CheckEmailCache = newCache(config.Redis.CheckEmailCache)
+	ports.CacheContext.CodeConfirmationCache = newCache(config.Redis.CodeConfirmationCache)
 }
 
 func newCache(c cacheConfig) ports.Cache {
