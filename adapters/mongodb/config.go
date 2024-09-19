@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devfeel/mapper"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/errors"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,7 +49,7 @@ func SetupMongodbConfiguration() {
 func setupPersistenceContext(database *mongo.Database) {
 	mongoDbCredentialsRepository := NewMongoDbCredentialsRepository(database.Collection(CredentialsCollection))
 	mongoDbUserRepository := NewMongoDbUserRepository(database.Collection(UserCollection))
-	persistenceCtx := core.PersistenceContext
+	persistenceCtx := ports.PersistenceContext
 	persistenceCtx.CredentialsPersistenceService = NewMongoDbCredentialsService(mongoDbCredentialsRepository)
 	persistenceCtx.UserPersistenceService = NewMongoDbUserService(mongoDbUserRepository)
 }

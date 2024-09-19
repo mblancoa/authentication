@@ -17,7 +17,6 @@ const (
 	RunMode = "RUN_MODE"
 )
 
-var PersistenceContext *persistenceContext = &persistenceContext{}
 var NotificationContext *notificationContext = &notificationContext{}
 var CacheContext *cacheContext = &cacheContext{}
 var ApplicationContext *Context = &Context{}
@@ -25,10 +24,6 @@ var configFile string
 
 type Context struct {
 	AuthenticationService AuthenticationService
-}
-type persistenceContext struct {
-	CredentialsPersistenceService ports.CredentialsPersistenceService
-	UserPersistenceService        ports.UserPersistenceService
 }
 type notificationContext struct {
 	NotificationService ports.NotificationService
@@ -45,7 +40,7 @@ func SetupCoreConfig() {
 }
 
 func setupCoreContext() {
-	p := PersistenceContext
+	p := ports.PersistenceContext
 	n := NotificationContext
 	ApplicationContext.AuthenticationService = NewAuthenticationService(n.NotificationService, p.CredentialsPersistenceService, p.UserPersistenceService)
 }

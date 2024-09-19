@@ -4,6 +4,7 @@ import (
 	"context"
 	mim "github.com/ONSdigital/dp-mongodb-in-memory"
 	"github.com/mblancoa/authentication/core"
+	"github.com/mblancoa/authentication/core/ports"
 	"github.com/mblancoa/authentication/tools"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -52,7 +53,7 @@ func TestSetupMongodbConfiguration(t *testing.T) {
 
 	SetupMongodbConfiguration()
 
-	assert.NotEmpty(t, core.PersistenceContext)
-	assert.NotEmpty(t, core.PersistenceContext.UserPersistenceService)
-	assert.NotEmpty(t, core.PersistenceContext.CredentialsPersistenceService)
+	assert.NotEmpty(t, ports.PersistenceContext)
+	assert.NotEmpty(t, ports.PersistenceContext.UserPersistenceService)
+	assert.NotEmpty(t, ports.PersistenceContext.CredentialsPersistenceService)
 }
